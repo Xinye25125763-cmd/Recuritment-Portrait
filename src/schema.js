@@ -24,7 +24,7 @@ const SECTIONS = [
   {
     id: 'meta',
     title: '开始之前',
-    icon: '◆',
+    icon: '',
     desc: '这两项决定后续要填哪些字段，请先选择。',
     fields: [
       {
@@ -60,8 +60,8 @@ const SECTIONS = [
   {
     id: 'basic',
     title: '基本信息',
-    icon: '①',
-    desc: '按央国企 + 互联网网申表单实际字段设计。带 🔒 的是敏感信息，仅存本地、不进分享版导出。',
+    icon: '',
+    desc: '按央国企 + 互联网网申表单实际字段设计。敏感信息仅存本地、不进分享版导出。',
     fields: [
       { key: 'name', label: '姓名', type: 'text', required: true, track: 'both' },
       { key: 'gender', label: '性别', type: 'radio', options: ['男', '女'], track: 'both' },
@@ -92,9 +92,9 @@ const SECTIONS = [
 
       { key: 'idNumber', label: '身份证号', type: 'text', track: 'soe', sensitive: true,
         showIf: d => hasTrack(d, '央国企'),
-        hint: '🔒 仅存你的浏览器本地，不会进入分享版导出，也永远不会写进简历文件' },
+        hint: '仅存你的浏览器本地，不会进入分享版导出，也永远不会写进简历文件' },
       { key: 'emergencyContact', label: '紧急联系人', type: 'text', track: 'soe', sensitive: true,
-        showIf: d => hasTrack(d, '央国企'), hint: '🔒 格式：姓名 / 关系 / 电话' },
+        showIf: d => hasTrack(d, '央国企'), hint: '格式：姓名 / 关系 / 电话' },
 
       { key: 'github', label: 'GitHub 主页', type: 'text', track: 'internet',
         showIf: d => hasTrack(d, '互联网大厂') || hasTrack(d, '中小厂/创业公司'),
@@ -108,7 +108,7 @@ const SECTIONS = [
   {
     id: 'education',
     title: '教育背景',
-    icon: '②',
+    icon: '',
     desc: '从最高学历开始填。GPA 和排名是硬筛项，没有排名就如实写"学院不排名"，不要编。',
     fields: [
       // ---- 研究生 ----
@@ -162,8 +162,8 @@ const SECTIONS = [
   {
     id: 'intent',
     title: '求职意向',
-    icon: '③',
-    desc: '⭐ 这一节最重要 —— 它是岗位画像和推荐的核心输入。方向没想好没关系，把倾向度和顾虑如实填出来，系统会帮你分析。',
+    icon: '',
+    desc: '这一节最重要 —— 它是岗位画像和推荐的核心输入。方向没想好没关系，把倾向度和顾虑如实填出来，系统会帮你分析。',
     fields: [
       {
         key: 'targetDirections',
@@ -234,7 +234,7 @@ const SECTIONS = [
   {
     id: 'internship',
     title: '实习经历',
-    icon: '④',
+    icon: '',
     desc: '这是校招简历权重最高的部分。每段实习按 STAR 拆解，量化成果没有就写"暂无量化"，绝不编数字 —— 面试官会顺着简历追问。',
     isList: true,
     listKey: 'internships',
@@ -260,12 +260,12 @@ const SECTIONS = [
       { key: 'responsibilities', label: '我具体做了什么', type: 'textarea', rows: 5,
         hint: '3-5 条，动词开头。写"做了什么"而非"参与了什么"' },
       { key: 'metrics', label: '量化成果', type: 'textarea', rows: 3,
-        hint: '如：日均处理数据 500W 条、看板被 3 个业务线使用、接口 P99 从 800ms 降到 200ms。\n⚠️ 没有真实数字就写"暂无量化"，不要估算或编造' },
+        hint: '如：日均处理数据 500W 条、看板被 3 个业务线使用、接口 P99 从 800ms 降到 200ms。\n没有真实数字就写"暂无量化"，不要估算或编造' },
       { key: 'techStack', label: '用到的工具 / 技术栈', type: 'text',
         hint: '如：Python, SQL, Hive, Tableau, Axure' },
       { key: 'deepDivePoints', label: '可深挖的点（面试会问）', type: 'textarea', rows: 3,
         hint: '列 2-3 个你能讲 5 分钟的技术/业务细节' },
-      { key: 'weakPoints', label: '⚠️ 我讲不清楚的地方', type: 'textarea', rows: 2,
+      { key: 'weakPoints', label: '我讲不清楚的地方', type: 'textarea', rows: 2,
         hint: '诚实记录短板，这不会出现在简历里，但面试准备时系统会针对性帮你补' }
     ]
   },
@@ -274,7 +274,7 @@ const SECTIONS = [
   {
     id: 'projects',
     title: '项目经历',
-    icon: '⑤',
+    icon: '',
     desc: '课程项目、竞赛项目、科研项目、个人项目都算。没有实习的话这里是主要支撑。',
     isList: true,
     listKey: 'projects',
@@ -289,14 +289,14 @@ const SECTIONS = [
       { key: 'myRole', label: '我的角色', type: 'text', hint: '如：负责数据处理模块 / 项目负责人' },
       { key: 'background', label: '项目背景与目标', type: 'textarea', rows: 2 },
       { key: 'myWork', label: '我具体负责的部分', type: 'textarea', rows: 4,
-        hint: '⚠️ 只写你自己做的，团队做的用"团队完成X，我负责其中Y"表述' },
+        hint: '只写你自己做的，团队做的用"团队完成X，我负责其中Y"表述' },
       { key: 'difficulty', label: '技术难点 / 挑战', type: 'textarea', rows: 3,
         hint: '遇到什么问题，怎么解决的 —— 这是面试最爱问的' },
       { key: 'result', label: '项目成果', type: 'textarea', rows: 2,
         hint: '如：获校级一等奖 / 论文录用 / 上线服务 xx 用户 / 暂无对外成果' },
       { key: 'techStack', label: '技术栈', type: 'text' },
       { key: 'link', label: '项目链接（GitHub / 演示）', type: 'text' },
-      { key: 'weakPoints', label: '⚠️ 我讲不清楚的地方', type: 'textarea', rows: 2 }
+      { key: 'weakPoints', label: '我讲不清楚的地方', type: 'textarea', rows: 2 }
     ]
   },
 
@@ -304,18 +304,18 @@ const SECTIONS = [
   {
     id: 'skills',
     title: '技能清单',
-    icon: '⑥',
-    desc: '⚠️ 严格分三档。写进简历的必须能被追问，"了解"档不写进简历但面试提到不慌。这个分档是防止简历翻车的关键。',
+    icon: '',
+    desc: '严格分三档。写进简历的必须能被追问，"了解"档不写进简历但面试提到不慌。这个分档是防止简历翻车的关键。',
     fields: [
-      { key: 'skillsProficient', label: '① 熟练（做过项目，能被深入追问）', type: 'textarea',
+      { key: 'skillsProficient', label: '熟练（做过项目，能被深入追问）', type: 'textarea',
         rows: 4, track: 'both',
         hint: '这些才能写进简历技能栏。格式：技能名 — 用它做过什么\n如：Python — 实习中写过 ETL 脚本处理日均 500W 数据' },
-      { key: 'skillsFamiliar', label: '② 熟悉（用过，能完成常规任务）', type: 'textarea',
+      { key: 'skillsFamiliar', label: '熟悉（用过，能完成常规任务）', type: 'textarea',
         rows: 3, track: 'both' },
-      { key: 'skillsKnown', label: '③ 了解（看过文档/教程，没实战）', type: 'textarea',
+      { key: 'skillsKnown', label: '了解（看过文档/教程，没实战）', type: 'textarea',
         rows: 3, track: 'both',
-        hint: '⚠️ 这一档不要写进简历。写了大概率会被问倒' },
-      { key: 'skillGaps', label: '④ 已知缺口（JD 常出现但我确实没有）', type: 'textarea',
+        hint: '这一档不要写进简历。写了大概率会被问倒' },
+      { key: 'skillGaps', label: '已知缺口（JD 常出现但我确实没有）', type: 'textarea',
         rows: 3, track: 'both',
         hint: '如实列出。系统会在岗位匹配时标出这些缺口，并帮你判断是否值得补' },
       { key: 'certificates', label: '证书', type: 'textarea', rows: 3, track: 'both',
@@ -327,7 +327,7 @@ const SECTIONS = [
   {
     id: 'honors',
     title: '荣誉奖励',
-    icon: '⑦',
+    icon: '',
     desc: '央国企看重校级以上 + 集体荣誉 + 党团相关；互联网更看重专业竞赛。系统会按投递对象自动调整展示顺序。',
     fields: [
       { key: 'honorsNational', label: '国家级 / 省部级奖项', type: 'textarea', rows: 4, track: 'both',
@@ -344,8 +344,8 @@ const SECTIONS = [
   {
     id: 'campus',
     title: '学生工作与社会实践',
-    icon: '⑧',
-    desc: '⭐ 这是央国企的显著加分项。投互联网时系统会自动压缩这部分篇幅。',
+    icon: '',
+    desc: '这是央国企的显著加分项。投互联网时系统会自动压缩这部分篇幅。',
     showIf: d => hasTrack(d, '央国企') || hasTrack(d, '事业单位/高校'),
     fields: [
       { key: 'campusRoles', label: '学生干部经历', type: 'textarea', rows: 5, track: 'soe',
@@ -360,8 +360,8 @@ const SECTIONS = [
   {
     id: 'family',
     title: '家庭情况',
-    icon: '⑨',
-    desc: '🔒 仅央国企政审表要求。此节全部为敏感信息，只存本地、不进分享版导出、永不写入简历文件。',
+    icon: '',
+    desc: '仅央国企政审表要求。此节全部为敏感信息，只存本地、不进分享版导出、永不写入简历文件。',
     showIf: d => hasTrack(d, '央国企'),
     isList: true,
     listKey: 'familyMembers',
@@ -383,11 +383,11 @@ const SECTIONS = [
   {
     id: 'summary',
     title: '自我评价',
-    icon: '⑩',
+    icon: '',
     desc: '三句话，每句必须有事实支撑。形容词堆砌等于没写。',
     fields: [
       { key: 'selfSummary', label: '自我评价', type: 'textarea', rows: 5, track: 'both',
-        hint: '❌ 反例：本人性格开朗，工作认真负责，善于团队协作\n✅ 正例：在字节实习期间独立负责用户增长看板从需求到上线全流程，支撑3个业务线决策；带过4人小组完成校级重点项目并获一等奖' },
+        hint: '反例：本人性格开朗，工作认真负责，善于团队协作\n正例：在字节实习期间独立负责用户增长看板从需求到上线全流程，支撑3个业务线决策；带过4人小组完成校级重点项目并获一等奖' },
       { key: 'extraNotes', label: '其他补充', type: 'textarea', rows: 3, track: 'both',
         hint: '任何你觉得重要但上面没地方填的' }
     ]
@@ -445,7 +445,7 @@ function migrate(loaded) {
   const merged = { ...fresh, ...loaded };
   merged.schemaVersion = SCHEMA_VERSION;
 
-  // ⚠️ 必须放在下面的 isList 循环之前：
+  // 注意：必须放在下面的 isList 循环之前：
   // v3 的 familyMembers 是 textarea 字符串，而循环会把"非数组"一律重置为 []，
   // 先转成数组，旧数据才不会被抹掉。
   if (typeof merged.familyMembers === 'string') {

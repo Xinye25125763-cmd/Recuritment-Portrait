@@ -12,9 +12,11 @@
   /* 顶栏覆盖 */
   header{margin:0 calc(var(--space-6) * -1) var(--space-6);padding:var(--space-3) var(--space-6)}
   .privacy{
-    font-size:var(--text-xs);color:var(--brand-600);background:var(--brand-50);
-    padding:var(--space-1) var(--space-3);border-radius:var(--radius-full);
-    border:1px solid var(--brand-200);
+    font-size:var(--text-xs);color:var(--ink-3);letter-spacing:0.02em;
+  }
+  .privacy::before{
+    content:'';display:inline-block;width:5px;height:5px;border-radius:50%;
+    background:var(--brand-400);margin-right:6px;vertical-align:2px;
   }
   .savehint{font-size:var(--text-xs);color:var(--ink-3);min-width:96px}
 
@@ -28,7 +30,13 @@
   .pstep:hover{border-color:var(--brand-400);color:var(--brand-600)}
   .pstep.active{background:var(--brand-600);color:#fff;border-color:var(--brand-600)}
   .pstep.done{background:var(--brand-50);color:var(--brand-600);border-color:var(--brand-200)}
-  .pstep .dot{font-size:10px;margin-left:4px;opacity:.8}
+  .pstep .pstep-num{
+    display:inline-block;width:16px;height:16px;line-height:16px;text-align:center;
+    border-radius:50%;background:var(--gray-200);color:var(--ink-3);font-size:10px;
+    margin-right:5px;vertical-align:1px;transition:var(--transition-fast);
+  }
+  .pstep.active .pstep-num{background:rgba(255,255,255,0.25);color:#fff}
+  .pstep.done .pstep-num{background:var(--brand-200);color:var(--brand-600)}
 
   /* 卡片覆盖 */
   .card{padding:var(--space-6) var(--space-8);margin-bottom:var(--space-5)}
@@ -143,7 +151,7 @@
   }
   .cl-ok{background:var(--brand-50);color:var(--brand-700)}
   .cl-warn{background:var(--warn-soft);color:#7a5c10}
-  .cl-mark{font-weight:600;flex-shrink:0}
+  .cl-mark{font-weight:600;flex-shrink:0;width:12px}
 
   .note{
     background:var(--warn-soft);border:1px solid #f0e2c0;border-radius:var(--radius-md);
@@ -166,7 +174,7 @@
   <header>
     <div class="hrow">
       <div class="logo">秋招画像系统 <span>· 信息填写</span></div>
-      <div class="privacy">🔒 数据仅存本地浏览器，不上传任何服务器</div>
+      <div class="privacy">纯前端 · 不上传</div>
       <div class="spacer"></div>
       <a href="match.html" class="btn">岗位匹配</a>
       <a href="intention.html" class="btn">意向岗位</a>
@@ -181,19 +189,16 @@
       <div v-for="(s,i) in visibleSections" :key="s.id"
            class="pstep" :class="{active:i===step, done:i<step}"
            @click="step=i">
-        {{ s.icon }} {{ s.title }}
-        <span class="dot" v-if="sectionFilled(s)">●</span>
+        <span class="pstep-num">{{ i+1 }}</span>{{ s.title }}
       </div>
       <div class="pstep" :class="{active:step===visibleSections.length}"
-           @click="step=visibleSections.length">✓ 完成</div>
+           @click="step=visibleSections.length">完成</div>
     </div>
   </header>
 
   <!-- ══ 填写区 ══ -->
   <div v-if="step < visibleSections.length" class="card">
-    <div class="sec-title">
-      <span class="sec-icon">{{ cur.icon }}</span>{{ cur.title }}
-    </div>
+    <div class="sec-title">{{ cur.title }}</div>
     <div class="sec-desc">{{ cur.desc }}</div>
 
     <!-- 普通字段 -->
@@ -203,7 +208,7 @@
         <label class="flabel">
           {{ f.label }}
           <span v-if="f.required" class="req">*</span>
-          <span v-if="f.sensitive" class="badge badge-lock">🔒 仅本地</span>
+          <span v-if="f.sensitive" class="badge badge-lock">仅本地</span>
           <span v-else-if="f.track==='soe'" class="badge badge-soe">央国企</span>
           <span v-else-if="f.track==='internet'" class="badge badge-net">互联网</span>
         </label>
@@ -268,7 +273,7 @@
                class="field" :class="{wide: isWide(f)}">
             <label class="flabel">
               {{ f.label }}<span v-if="f.required" class="req">*</span>
-              <span v-if="f.sensitive" class="badge badge-lock">🔒 仅本地</span>
+              <span v-if="f.sensitive" class="badge badge-lock">仅本地</span>
             </label>
             <template v-if="f.type==='textarea'">
               <textarea v-model="item[f.key]" :rows="f.rows||3"></textarea>
@@ -306,7 +311,7 @@
 
         <!-- 已挖掘简历文案 -->
         <div v-if="item._mined?.length" class="mined-panel">
-          <div class="mined-title">📝 已挖掘简历文案（来自「意向岗位」经历挖掘）</div>
+          <div class="mined-title">已挖掘简历文案（来自「意向岗位」经历挖掘）</div>
           <div class="mined-list">
             <div class="mined-item" v-for="(m, mIdx) in item._mined" :key="mIdx">
               <span class="mined-keyword">{{ m.keyword }}</span>
@@ -329,7 +334,7 @@
   <!-- ══ 完成页 ══ -->
   <div v-else class="card">
     <div class="done-box">
-      <div class="done-icon">◈</div>
+      <div class="done-icon"></div>
       <div class="sec-title" style="justify-content:center">信息填写概览</div>
 
       <div class="stat-grid">
@@ -354,13 +359,13 @@
       <div class="checklist">
         <div v-for="c in checks" :key="c.label"
              class="cl-item" :class="c.ok?'cl-ok':'cl-warn'">
-          <span class="cl-mark">{{ c.ok?'✓':'!' }}</span>
+          <span class="cl-mark"></span>
           <span>{{ c.label }}</span>
         </div>
       </div>
 
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:14px">
-        <a href="portrait.html" class="btn btn-primary" style="font-size:15px;padding:11px 30px">🎯 生成人才画像</a>
+        <a href="portrait.html" class="btn btn-primary" style="font-size:15px;padding:11px 30px">生成人才画像</a>
         <button class="btn btn-primary" style="font-size:15px;padding:11px 30px"
                 @click="exportData">导出 JSON 档案</button>
       </div>
@@ -370,7 +375,7 @@
         1. 点击「生成人才画像」进入下一步，系统会自动读取你刚才填写的档案并生成能力画像。<br>
         2. 也可以先导出 JSON 备份，<b>妥善保管这个文件</b> —— 换电脑/换浏览器时用"导入 JSON"恢复。<br>
         3. 浏览器缓存会自动暂存，但<b>清缓存或换设备就会丢</b>，所以每次填完都建议导出一次。<br><br>
-        <b>关于隐私：</b>身份证号、家庭情况等标 🔒 的字段只存在你的浏览器里，导出时会单独放在
+        <b>关于隐私：</b>身份证号、家庭情况等敏感字段只存在你的浏览器里，导出时会单独放在
         <code>_sensitive</code> 字段中。如果你要把 JSON 发给别人看，请先手动删掉这一段。
       </div>
     </div>

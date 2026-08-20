@@ -172,14 +172,14 @@
       <button class="btn" :class="{'btn-primary':editMode}" @click="toggleEdit">{{editMode?'退出编辑':'自定义画像'}}</button>
       <button class="btn btn-primary" @click="doExport('json')">导出 JSON</button>
       <button class="btn btn-primary" @click="doExport('text')">复制文本</button>
-      <button class="btn" @click="$refs.importFile.click()">📁 导入 JSON</button>
+      <button class="btn" @click="$refs.importFile.click()">导入 JSON</button>
       <input type="file" ref="importFile" accept=".json" style="display:none" @change="handleImport">
     </div>
 
 
   <!-- 空状态 -->
   <div v-if="!loaded" class="empty card">
-    <div class="empty-icon">📋</div>
+    <div class="empty-icon"></div>
     <h2>暂无档案数据</h2>
     <p>请先在「信息填写」页面完成基础信息录入，系统将自动为你生成人才画像。</p>
     <div class="empty-steps">
@@ -215,7 +215,7 @@
 
     <!-- 自定义编辑面板 -->
     <div class="edit-panel" v-if="editMode">
-      <div class="edit-title">⚙ 自定义画像参数 <span style="font-weight:400;font-size:13px;color:var(--ink3)">（修改后点击保存，系统会记住你的偏好）</span></div>
+      <div class="edit-title">自定义画像参数 <span style="font-weight:400;font-size:13px;color:var(--ink3)">（修改后点击保存，系统会记住你的偏好）</span></div>
 
       <div class="edit-section-title" @click="editCollapsed.radar=!editCollapsed.radar" style="cursor:pointer;user-select:none">
         <span class="edit-toggle">{{ editCollapsed.radar ? '▶' : '▼' }}</span> 能力雷达评分（0-5）
@@ -261,10 +261,10 @@
       </div>
 
       <div class="edit-actions">
-        <button class="btn btn-primary" @click="saveCustom">💾 保存偏好</button>
-        <button class="btn" @click="cancelEdit">✕ 取消</button>
-        <button class="btn" @click="resetCustom">↺ 重置为自动</button>
-        <span class="edit-hint-reset" v-if="hasCustom" @click="clearCustom">🗑 清空所有自定义</span>
+<button class="btn btn-primary" @click="saveCustom">保存偏好</button>
+          <button class="btn" @click="cancelEdit">取消</button>
+          <button class="btn" @click="resetCustom">重置为自动</button>
+          <span class="edit-hint-reset" v-if="hasCustom" @click="clearCustom">清空所有自定义</span>
       </div>
     </div>
 
@@ -287,7 +287,7 @@
 
     <!-- 能力雷达 -->
     <div class="card">
-      <div class="card-title"><span class="icon">◈</span> 能力雷达</div>
+      <div class="card-title">能力雷达</div>
       <div class="radar-wrap">
         <svg class="radar-svg" :width="radarSize" :height="radarSize" viewBox="0 0 340 340">
           <!-- 网格 -->
@@ -330,7 +330,7 @@
           class="fit-card" :class="f.level">
           <div class="fit-header">
             <span class="fit-name">{{ f.role }}</span>
-            <span v-if="f.isTop" class="fit-badge" style="background:#2b5d4f;color:#fff">★ 首选</span>
+            <span v-if="f.isTop" class="fit-badge" style="background:#2b5d4f;color:#fff">首选</span>
             <span class="fit-badge" :class="f.level">{{ f.level==='strong'?'强匹配':f.level==='medium'?'中匹配':'弱匹配' }}</span>
           </div>
           <div class="fit-bar"><div class="fit-bar-fill" :class="f.level" :style="{width:f.score+'%'}"></div></div>
@@ -359,7 +359,7 @@
 
     <!-- 投递建议 -->
     <div class="card">
-      <div class="card-title"><span class="icon">✦</span> 投递策略建议</div>
+      <div class="card-title">投递策略建议</div>
       <div class="advice-box" v-html="portrait.advice"></div>
     </div>
 

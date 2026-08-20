@@ -135,7 +135,7 @@
     </div>
   </header>
 
-  <div class="page-title">📄 简历生成</div>
+  <div class="page-title">简历生成</div>
 
   <!-- 配置区 -->
   <div class="config-card">
@@ -168,7 +168,7 @@
 
   <!-- 空状态 -->
   <div v-if="!selectedJobId && intentions.length > 0" class="config-card" style="text-align:center;padding:60px 20px;color:var(--ink3)">
-    <div style="font-size:48px;margin-bottom:16px">📄</div>
+    <div style="font-size:48px;margin-bottom:16px"></div>
     <div style="font-size:16px;font-weight:600;color:var(--ink);margin-bottom:8px">选择目标岗位以生成简历</div>
     <div style="font-size:13px">简历会根据目标岗位自动筛选和排序相关经历</div>
   </div>
@@ -181,7 +181,7 @@
 
       <!-- 目标岗位提示 -->
       <div class="resume-target">
-        🎯 目标岗位：{{ resumeData.targetJob.title }} @ {{ resumeData.targetJob.company }} · 匹配分 {{ resumeData.targetJob.score }}
+        目标岗位：{{ resumeData.targetJob.title }} @ {{ resumeData.targetJob.company }} · 匹配分 {{ resumeData.targetJob.score }}
       </div>
 
       <!-- 个人信息 -->
@@ -254,14 +254,14 @@
 
     <!-- 操作按钮 -->
     <div class="action-bar">
-      <button class="btn btn-primary" @click="copyResume">📋 复制简历文本</button>
-      <button class="btn" @click="printResume">🖨️ 打印 / 另存为 PDF</button>
+      <button class="btn btn-primary" @click="copyResume">复制简历文本</button>
+      <button class="btn" @click="printResume">打印 / 另存为 PDF</button>
     </div>
 
     <!-- ATS 校验 -->
     <div class="ats-card" v-if="atsResult">
       <div class="ats-title">
-        🤖 ATS 系统兼容性检测
+        ATS 系统兼容性检测
         <span class="ats-score" :class="atsResult.level">{{ atsResult.totalScore }} 分</span>
         <span style="font-size:12px;color:var(--ink3)">满分 100</span>
       </div>

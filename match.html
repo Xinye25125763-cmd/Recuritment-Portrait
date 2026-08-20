@@ -197,7 +197,7 @@
     <div class="hrow">
       <div class="logo">秋招画像系统 <span>· 岗位匹配</span></div>
       <div class="spacer"></div>
-      <button class="btn btn-sm" @click="doExport" v-if="loaded">📥 导出</button>
+      <button class="btn btn-sm" @click="doExport" v-if="loaded">导出</button>
       <a href="index.html" class="btn">填写信息</a>
       <a href="portrait.html" class="btn">查看画像</a>
       <a href="intention.html" class="btn">意向岗位</a>
@@ -207,7 +207,7 @@
 
   <!-- 空状态：无档案 -->
   <div v-if="!loaded && !error" class="empty card">
-    <div class="empty-icon">📋</div>
+    <div class="empty-icon"></div>
     <h2>暂无档案数据</h2>
     <p>请先在「信息填写」页面完成基础信息录入，匹配引擎将基于你的画像推荐最合适的岗位。</p>
     <div class="empty-steps">
@@ -224,7 +224,7 @@
 
   <!-- 错误状态 -->
   <div v-if="error" class="empty card">
-    <div class="empty-icon">⚠</div>
+    <div class="empty-icon"></div>
     <h2>加载失败</h2>
     <p>{{ error }}</p>
     <button class="btn btn-primary" style="margin-top:8px" @click="init">重试</button>
@@ -325,8 +325,8 @@
           </div>
         </div>
         <div class="config-actions">
-          <button class="btn btn-primary" @click="reMatch">🔄 重新匹配</button>
-          <button class="btn" @click="resetConfig">↺ 恢复档案设置</button>
+          <button class="btn btn-primary" @click="reMatch">重新匹配</button>
+          <button class="btn" @click="resetConfig">恢复档案设置</button>
         </div>
       </div>
 
@@ -402,8 +402,8 @@
               v-if="!intentionMap[r.job.id]"
               @click="addIntention(r.job.id)"
               title="加入意向岗位，去优化简历"
-            >💡 意向</button>
-            <span v-else class="intention-tag" title="已在意向列表中">💡 已意向</span>
+            >意向</button>
+            <span v-else class="intention-tag" title="已在意向列表中">已意向</span>
             <span v-if="appliedMap[r.job.id]?.status" class="badge level-strong">{{ appliedStatusLabel(appliedMap[r.job.id].status) }}</span>
             <select v-if="appliedMap[r.job.id]" class="apply-select" v-model="appliedMap[r.job.id].status" @change="saveApplied">
               <option value="interested">感兴趣</option>
@@ -484,8 +484,8 @@
 
     <!-- 空结果 -->
     <div v-if="filteredResults.length === 0 && loaded" class="empty card" style="padding:48px 20px">
-      <div class="empty-icon">🔍</div>
-      <h2>当前筛选条件下无匹配岗位</h2>
+<div class="empty-icon"></div>
+    <h2>当前筛选条件下无匹配岗位</h2>
       <p>请尝试清除部分筛选条件，或调整匹配参数后重新匹配。</p>
       <button class="btn btn-primary" style="margin-top:8px" @click="clearFilters">清除筛选</button>
     </div>
