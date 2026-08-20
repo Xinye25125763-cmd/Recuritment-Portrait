@@ -194,9 +194,20 @@
       <div class="pstep" :class="{active:step===visibleSections.length}"
            @click="step=visibleSections.length">完成</div>
     </div>
-  </header>
+</header>
 
-  <!-- ══ 填写区 ══ -->
+<!-- 工作流导航 -->
+<nav class="workflow-nav">
+  <span class="workflow-step active"><span class="num">1</span>信息填写</span>
+  <span class="workflow-arrow">→</span>
+  <span class="workflow-step"><span class="num">2</span>岗位匹配</span>
+  <span class="workflow-arrow">→</span>
+  <span class="workflow-step"><span class="num">3</span>意向岗位</span>
+  <span class="workflow-arrow">→</span>
+  <span class="workflow-step"><span class="num">4</span>简历生成</span>
+</nav>
+
+<!-- ══ 填写区 ══ -->
   <div v-if="step < visibleSections.length" class="card">
     <div class="sec-title">{{ cur.title }}</div>
     <div class="sec-desc">{{ cur.desc }}</div>
@@ -364,17 +375,27 @@
         </div>
       </div>
 
-      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:14px">
-        <a href="portrait.html" class="btn btn-primary" style="font-size:15px;padding:11px 30px">生成人才画像</a>
-        <button class="btn btn-primary" style="font-size:15px;padding:11px 30px"
-                @click="exportData">导出 JSON 档案</button>
+      <!-- 推荐下一步 -->
+      <div style="background:var(--brand-50);border:1px solid var(--brand-200);border-radius:var(--radius-lg);padding:var(--space-5);margin:var(--space-5) 0;text-align:left">
+        <div style="font-size:var(--text-sm);font-weight:600;color:var(--brand-700);margin-bottom:var(--space-3)">推荐下一步</div>
+        <div style="display:flex;gap:var(--space-3);flex-wrap:wrap">
+          <a href="match.html" class="btn btn-primary" style="flex:1;min-width:160px;text-align:center;font-size:14px;padding:12px 20px">
+            <div style="font-weight:600">岗位匹配</div>
+            <div style="font-size:12px;font-weight:400;opacity:.85;margin-top:2px">基于画像推荐合适岗位</div>
+          </a>
+          <a href="portrait.html" class="btn" style="flex:1;min-width:160px;text-align:center;font-size:14px;padding:12px 20px">
+            <div style="font-weight:600">查看画像</div>
+            <div style="font-size:12px;font-weight:400;opacity:.7;margin-top:2px">预览能力雷达与投递策略</div>
+          </a>
+          <button class="btn" @click="exportData" style="flex:1;min-width:160px;text-align:center;font-size:14px;padding:12px 20px">
+            <div style="font-weight:600">导出 JSON</div>
+            <div style="font-size:12px;font-weight:400;opacity:.7;margin-top:2px">备份档案，换设备可恢复</div>
+          </button>
+        </div>
       </div>
 
       <div class="note">
-        <b>下一步怎么用：</b><br>
-        1. 点击「生成人才画像」进入下一步，系统会自动读取你刚才填写的档案并生成能力画像。<br>
-        2. 也可以先导出 JSON 备份，<b>妥善保管这个文件</b> —— 换电脑/换浏览器时用"导入 JSON"恢复。<br>
-        3. 浏览器缓存会自动暂存，但<b>清缓存或换设备就会丢</b>，所以每次填完都建议导出一次。<br><br>
+        <b>使用提示：</b>岗位匹配会读取你刚才填写的档案，自动推荐最合适的岗位。所有数据只存在你的浏览器，<b>清缓存会丢失</b>，建议填完后导出一次备份。<br><br>
         <b>关于隐私：</b>身份证号、家庭情况等敏感字段只存在你的浏览器里，导出时会单独放在
         <code>_sensitive</code> 字段中。如果你要把 JSON 发给别人看，请先手动删掉这一段。
       </div>

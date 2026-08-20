@@ -158,9 +158,20 @@
       <a href="resume.html" class="btn">简历生成</a>
       <a href="portrait.html" class="btn">查看画像</a>
     </div>
-  </header>
+</header>
 
-  <!-- 页面标题 -->
+<!-- 工作流导航 -->
+<nav class="workflow-nav">
+  <a href="index.html" class="workflow-step done"><span class="num">1</span>信息填写</a>
+  <span class="workflow-arrow">→</span>
+  <a href="match.html" class="workflow-step done"><span class="num">2</span>岗位匹配</a>
+  <span class="workflow-arrow">→</span>
+  <span class="workflow-step active"><span class="num">3</span>意向岗位</span>
+  <span class="workflow-arrow">→</span>
+  <span class="workflow-step"><span class="num">4</span>简历生成</span>
+</nav>
+
+<!-- 页面标题 -->
   <div class="page-title">
     意向岗位
     <span class="count" v-if="intentions.length > 0">{{ intentions.length }} 个</span>

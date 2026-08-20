@@ -538,6 +538,85 @@ header {
   background: var(--gray-400);
 }
 
+/* ── 工作流导航条 ── */
+.workflow-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--border-light);
+  font-size: var(--text-sm);
+  flex-wrap: wrap;
+}
+
+.workflow-step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  color: var(--ink-3);
+  text-decoration: none;
+  transition: var(--transition-fast);
+  cursor: default;
+}
+
+.workflow-step .num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--gray-200);
+  color: var(--ink-3);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.workflow-step.done {
+  color: var(--brand-600);
+  cursor: pointer;
+}
+
+.workflow-step.done:hover {
+  background: var(--brand-50);
+}
+
+.workflow-step.done .num {
+  background: var(--brand-100);
+  color: var(--brand-600);
+}
+
+.workflow-step.active {
+  background: var(--brand-600);
+  color: #fff;
+  font-weight: 500;
+}
+
+.workflow-step.active .num {
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+}
+
+.workflow-arrow {
+  color: var(--gray-300);
+  font-size: var(--text-xs);
+}
+
+@media (max-width: 640px) {
+  .workflow-nav {
+    gap: var(--space-1);
+    font-size: var(--text-xs);
+    padding: var(--space-2) var(--space-3);
+  }
+  .workflow-step {
+    padding: var(--space-1) var(--space-2);
+  }
+}
+
 /* ── 打印优化 ── */
 @media print {
   .site-header,

@@ -1,0 +1,150 @@
+{
+  "version": "1.0",
+  "lastUpdate": "2026-08-20",
+  "jobs": [
+    {
+      "id": "D001",
+      "company": "字节跳动",
+      "title": "数据分析师",
+      "track": "数据分析",
+      "employmentType": "正式",
+      "program": "2027届校园招聘",
+      "locations": ["北京", "上海"],
+      "business": "抖音电商",
+      "url": "https://jobs.bytedance.com/",
+      "responsibilities": [
+        "负责抖音电商业务的数据分析，搭建核心指标体系",
+        "通过 A/B 实验评估产品策略效果，输出数据驱动的业务建议",
+        "构建用户增长漏斗模型，识别转化瓶颈并提出优化方案"
+      ],
+      "keywords": ["指标体系", "A/B实验", "用户增长", "漏斗分析", "业务洞察"],
+      "crawlDate": "2026-08-20"
+    },
+    {
+      "id": "D002",
+      "company": "美团",
+      "title": "商业分析",
+      "track": "商业分析",
+      "employmentType": "正式",
+      "program": "2027届校园招聘",
+      "locations": ["北京", "上海"],
+      "business": "外卖业务",
+      "url": "https://zhaopin.meituan.com/",
+      "responsibilities": [
+        "支持外卖业务线的经营分析和战略决策，搭建业务监控看板",
+        "通过数据挖掘识别业务增长机会，输出专题分析报告",
+        "协助搭建商业预测模型，支撑年度预算和目标制定"
+      ],
+      "keywords": ["经营分析", "商业预测", "数据看板", "增长策略", "预算制定"],
+      "crawlDate": "2026-08-20"
+    },
+    {
+      "id": "P001",
+      "company": "腾讯",
+      "title": "产品经理",
+      "track": "产品经理",
+      "employmentType": "正式",
+      "program": "2027届校园招聘",
+      "locations": ["深圳", "北京"],
+      "business": "微信视频号",
+      "url": "https://careers.tencent.com/",
+      "responsibilities": [
+        "负责视频号创作者生态的产品策划，设计创作者激励和变现工具",
+        "通过用户调研和数据分析，挖掘创作者核心痛点并推动产品迭代",
+        "协调设计、研发、运营等团队，推进功能从 0 到 1 落地"
+      ],
+      "keywords": ["产品策划", "用户调研", "数据分析", "跨团队协作", "创作者生态"],
+      "crawlDate": "2026-08-20"
+    },
+    {
+      "id": "D003",
+      "company": "阿里巴巴",
+      "title": "数据分析",
+      "track": "数据分析",
+      "employmentType": "正式",
+      "program": "2027届校园招聘",
+      "locations": ["杭州", "北京"],
+      "business": "淘宝用户增长",
+      "url": "https://talent.alibaba.com/",
+      "responsibilities": [
+        "负责淘宝用户增长方向的数据分析，建立用户生命周期模型",
+        "设计并评估拉新、促活、留存策略的效果，输出优化建议",
+        "搭建实时数据监控体系，及时发现异常并驱动业务响应"
+      ],
+      "keywords": ["用户生命周期", "拉新促活", "实时监控", "增长策略", "数据体系"],
+      "crawlDate": "2026-08-20"
+    },
+    {
+      "id": "D004",
+      "company": "拼多多",
+      "title": "数据分析师",
+      "track": "数据分析",
+      "employmentType": "正式",
+      "program": "2027届校园招聘",
+      "locations": ["上海"],
+      "business": "多多买菜",
+      "url": "https://careers.pinduoduo.com/",
+      "responsibilities": [
+        "支持多多买菜业务的数据分析，监控核心经营指标",
+        "通过用户行为分析，挖掘下沉市场消费特征和品类机会",
+        "搭建自动化报表体系，提升业务团队数据获取效率"
+      ],
+      "keywords": ["经营指标", "用户行为", "下沉市场", "自动化报表", "品类分析"],
+      "crawlDate": "2026-08-20"
+    },
+    {
+      "id": "P002",
+      "company": "小红书",
+      "title": "产品经理",
+      "track": "产品经理",
+      "employmentType": "正式",
+      "program": "2027届校园招聘",
+      "locations": ["上海", "北京"],
+      "business": "社区产品",
+      "url": "https://www.xiaohongshu.com/careers/",
+      "responsibilities": [
+        "负责小红书社区内容分发策略的产品设计，提升用户内容消费体验",
+        "基于用户画像和内容标签，优化个性化推荐效果和冷启动策略",
+        "设计创作者内容运营工具，提升优质内容供给量和多样性"
+      ],
+      "keywords": ["内容分发", "个性化推荐", "用户画像", "创作者运营", "冷启动"],
+      "crawlDate": "2026-08-20"
+    },
+    {
+      "id": "D005",
+      "company": "京东",
+      "title": "商业分析",
+      "track": "商业分析",
+      "employmentType": "正式",
+      "program": "2027届校园招聘",
+      "locations": ["北京"],
+      "business": "零售业务",
+      "url": "https://zhaopin.jd.com/",
+      "responsibilities": [
+        "支持京东零售业务线的经营分析和战略规划，输出月度经营分析报告",
+        "通过竞争分析和市场研究，识别行业趋势和竞争格局变化",
+        "搭建商品价格监控和促销效果评估体系，支撑定价策略优化"
+      ],
+      "keywords": ["经营分析", "竞争分析", "市场研究", "价格监控", "促销评估"],
+      "crawlDate": "2026-08-20"
+    },
+    {
+      "id": "D006",
+      "company": "快手",
+      "title": "数据分析师",
+      "track": "数据分析",
+      "employmentType": "正式",
+      "program": "2027届校园招聘",
+      "locations": ["北京"],
+      "business": "商业化",
+      "url": "https://zhaopin.kuaishou.cn/",
+      "responsibilities": [
+        "负责快手商业化方向的数据分析，支持广告投放效果评估和优化",
+        "搭建广告核心指标体系，监控广告收入和用户体验平衡",
+        "通过实验设计和因果推断，量化产品策略对广告主 ROI 的影响"
+      ],
+      "keywords": ["广告效果", "指标体系", "因果推断", "ROI", "实验设计"],
+      "crawlDate": "2026-08-20"
+    }
+  ]
+}

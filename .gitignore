@@ -29,6 +29,7 @@ resume/*.md
 
 # 岗位与投递记录（含公司名、JD、面试记录等）
 jobs/*.json
+!jobs/jd-library.json
 !jobs/example*.json
 !jobs/README.md
 applications/*/
