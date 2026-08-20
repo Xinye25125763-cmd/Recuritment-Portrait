@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>秋招画像系统 · 岗位匹配</title>
+<link rel="stylesheet" href="./src/design-system.css">
+<script src="./vendor/vue.global.prod.js"></script>
+<script src="./src/schema.js"></script>
+<style>
+  #app{max-width:1180px;margin:0 auto;padding:0 var(--space-6) var(--space-16)}
+  header{margin:0 calc(var(--space-6) * -1) var(--space-6);padding:var(--space-3) var(--space-6)}
+
+  .btn-sm{font-size:var(--text-xs);padding:var(--space-1) var(--space-2)}
+  .btn-warn{background:var(--warn-soft);color:var(--warn);border-color:#f0dcc0}
+  .btn-warn:hover{background:#f5edd8}
+
+  .card{padding:var(--space-6) var(--space-8);margin-bottom:var(--space-5)}
+  .card-title{font-size:var(--text-md);font-weight:600;letter-spacing:-0.02em;margin-bottom:var(--space-4);display:flex;align-items:center;gap:var(--space-2)}
+  .card-title .icon{color:var(--brand-600);font-size:var(--text-sm)}
+
+  /* 空状态 */
+  .empty{padding:var(--space-16) var(--space-6)}
+  .empty h2{font-size:var(--text-lg)}
+  .empty-step{font-size:var(--text-sm);color:var(--ink-2)}
+  .empty-step .num{width:22px;height:22px;border-radius:50%;background:var(--brand-50);color:var(--brand-600);display:inline-flex;align-items:center;justify-content:center;font-size:var(--text-xs);font-weight:600}
+  .empty-step.active .num{background:var(--brand-600);color:#fff}
+
+  /* 统计栏 */
+  .stats-bar{display:flex;gap:var(--space-6);flex-wrap:wrap;align-items:center}
+  .stat-item{text-align:center;min-width:64px}
+  .stat-num{font-size:var(--text-xl);font-weight:700;letter-spacing:-0.04em;line-height:1.2}
+  .stat-num.strong{color:var(--brand-600)}
+  .stat-num.medium{color:var(--warn)}
+  .stat-num.weak{color:var(--ink-3)}
+  .stat-label{font-size:var(--text-xs);color:var(--ink-3);margin-top:var(--space-1)}
+  .stat-divider{width:1px;height:36px;background:var(--border)}
+  .stat-track{font-size:var(--text-sm);color:var(--ink-2)}
+  .stat-track span{font-weight:600;color:var(--ink)}
+
+  /* 加载 */
+  .loading{padding:var(--space-16) var(--space-6)}
+  .loading .spinner{
+    display:inline-block;width:32px;height:32px;border:3px solid var(--brand-100);
+    border-top-color:var(--brand-600);border-radius:50%;animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* 筛选 */
+  .filter-bar{display:flex;gap:var(--space-4);flex-wrap:wrap;align-items:flex-start}
+  .filter-group{display:flex;flex-direction:column;gap:var(--space-1)}
+  .filter-label{font-size:11px;color:var(--ink-3);font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+  .filter-options{display:flex;gap:var(--space-1);flex-wrap:wrap}
+  .filter-chip{
+    font-size:var(--text-xs);padding:var(--space-1) var(--space-3);border-radius:var(--radius-sm);
+    border:1px solid var(--border);background:var(--card);color:var(--ink-2);
+    cursor:pointer;transition:var(--transition-fast);user-select:none;
+  }
+  .filter-chip:hover{border-color:var(--brand-400);color:var(--brand-600)}
+  .filter-chip.active{background:var(--brand-50);border-color:var(--brand-600);color:var(--brand-600)}
+  .filter-clear{font-size:var(--text-xs);color:var(--danger);cursor:pointer;margin-left:auto;align-self:center}
+  .filter-clear:hover{text-decoration:underline}
+
+  /* 配置面板 */
+  .config-bar{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3);flex-wrap:wrap}
+  .config-toggle{
+    font-size:var(--text-sm);color:var(--brand-600);background:var(--brand-50);
+    border:1px solid var(--brand-200);padding:var(--space-1) var(--space-3);border-radius:var(--radius-sm);cursor:pointer;
+  }
+  .config-toggle:hover{background:var(--brand-100)}
+  .config-panel{
+    background:var(--brand-50);border:1px solid var(--brand-200);border-radius:var(--radius-lg);
+    padding:var(--space-5) var(--space-6);margin-bottom:var(--space-5);animation:expand .2s ease;
+  }
+  .config-row{display:flex;align-items:flex-start;gap:var(--space-3);margin-bottom:var(--space-3);flex-wrap:wrap}
+  .config-row label{min-width:90px;font-size:var(--text-sm);color:var(--ink-2);padding-top:4px}
+  .config-options{display:flex;gap:var(--space-2);flex-wrap:wrap;flex:1}
+  .config-option{display:flex;align-items:center;gap:4px;font-size:var(--text-sm);color:var(--ink-2);cursor:pointer}
+  .config-option input{cursor:pointer}
+  .config-actions{display:flex;gap:var(--space-2);margin-top:var(--space-4);padding-top:var(--space-3);border-top:1px solid var(--brand-200)}
+
+  /* Deal-breaker */
+  .db-notice{
+    font-size:var(--text-sm);color:var(--ink-2);background:var(--danger-soft);
+    border:1px solid #f0d6d0;border-radius:var(--radius-md);padding:var(--space-2) var(--space-4);margin-bottom:var(--space-4);
+  }
+  .db-notice strong{color:var(--danger)}
+
+  /* 匹配卡片 */
+  .match-card{
+    border:1px solid var(--border);border-radius:var(--radius-lg);padding:0;margin-bottom:var(--space-3);
+    overflow:hidden;transition:var(--transition-normal);background:var(--card);
+    box-shadow:var(--card-shadow);
+  }
+  .match-card:hover{box-shadow:var(--card-shadow-hover);border-color:var(--gray-300)}
+  .match-card.strong{border-left:4px solid var(--brand-600)}
+  .match-card.medium{border-left:4px solid var(--warn)}
+  .match-card.weak{border-left:4px solid var(--gray-300)}
+
+  .match-head{padding:var(--space-4) var(--space-5);cursor:pointer;user-select:none}
+  .match-head-top{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-1)}
+  .match-score{font-size:var(--text-lg);font-weight:700;letter-spacing:-0.04em;min-width:40px;text-align:right}
+  .match-score.strong{color:var(--brand-600)}
+  .match-score.medium{color:var(--warn)}
+  .match-score.weak{color:var(--gray-400)}
+  .match-title{font-weight:600;font-size:var(--text-base);color:var(--ink)}
+  .match-company{font-size:var(--text-sm);color:var(--ink-2)}
+  .match-badges{display:flex;gap:var(--space-1);flex-wrap:wrap}
+
+  .match-score-bar{height:4px;background:var(--gray-200);border-radius:2px;margin:var(--space-2) 0;overflow:hidden}
+  .match-score-fill{height:100%;border-radius:2px;transition:width .5s ease}
+  .match-score-fill.strong{background:var(--brand-600)}
+  .match-score-fill.medium{background:var(--warn)}
+  .match-score-fill.weak{background:var(--gray-300)}
+
+  .match-meta{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-1);align-items:center}
+  .reason-chip{
+    font-size:var(--text-xs);color:var(--brand-600);background:var(--brand-50);
+    border:1px solid var(--brand-200);padding:2px 8px;border-radius:var(--radius-sm);
+  }
+  .gap-chip{
+    font-size:var(--text-xs);color:var(--warn);background:var(--warn-soft);
+    border:1px solid #f0dcc0;padding:2px 8px;border-radius:var(--radius-sm);
+  }
+  .expand-hint{font-size:var(--text-xs);color:var(--ink-3);margin-left:auto}
+
+  /* JD 详情 */
+  .match-detail{
+    padding:0 var(--space-5) var(--space-4);border-top:1px solid var(--border);
+    background:var(--gray-50);display:none;
+  }
+  .match-card.expanded .match-detail{display:block;animation:expand .2s ease}
+  @keyframes expand{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+
+  .detail-section{margin-top:var(--space-3)}
+  .detail-label{font-size:var(--text-xs);color:var(--ink-3);font-weight:600;margin-bottom:var(--space-1);letter-spacing:.3px}
+  .detail-resp{font-size:var(--text-sm);color:var(--ink-2);line-height:1.8}
+  .detail-resp li{margin-left:18px;margin-bottom:3px}
+  .detail-kw{display:flex;gap:var(--space-1);flex-wrap:wrap}
+  .detail-kw .kw-tag{font-size:var(--text-xs);padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);background:var(--gray-100);color:var(--ink-2)}
+  .detail-meta{display:flex;gap:var(--space-5);flex-wrap:wrap;font-size:var(--text-sm);color:var(--ink-3)}
+  .detail-meta span strong{color:var(--ink-2)}
+  .detail-link{display:inline-block;margin-top:var(--space-3);font-size:var(--text-sm);color:var(--brand-600);text-decoration:none;border-bottom:1px solid var(--brand-600);padding-bottom:1px}
+  .detail-link:hover{opacity:.8}
+
+  /* 维度分数条 */
+  .dim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-2) var(--space-4);margin-top:var(--space-2)}
+  @media(max-width:560px){.dim-grid{grid-template-columns:repeat(2,1fr)}}
+  .dim-item{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-xs)}
+  .dim-label{min-width:52px;color:var(--ink-3)}
+  .dim-bar{flex:1;height:4px;background:var(--gray-200);border-radius:2px;overflow:hidden}
+  .dim-fill{height:100%;border-radius:2px;transition:width .4s ease}
+  .dim-fill.strong{background:var(--brand-600)}
+  .dim-fill.medium{background:var(--warn)}
+  .dim-fill.weak{background:var(--gray-300)}
+  .dim-val{min-width:24px;text-align:right;font-weight:600;color:var(--ink-2)}
+
+  /* 标记投递 */
+  .apply-wrap{display:flex;gap:var(--space-2);align-items:center;margin-left:auto}
+  .apply-btn{
+    font-size:var(--text-xs);padding:var(--space-1) var(--space-3);border-radius:var(--radius-sm);border:1px solid var(--brand-600);
+    background:var(--card);color:var(--brand-600);cursor:pointer;transition:var(--transition-fast);
+  }
+  .apply-btn:hover{background:var(--brand-50)}
+  .apply-btn.applied{background:var(--brand-600);color:#fff}
+  .apply-select{
+    font-size:var(--text-xs);padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);border:1px solid var(--border);
+    background:var(--card);color:var(--ink-2);cursor:pointer;
+  }
+
+  /* 意向 */
+  .intention-btn{
+    font-size:var(--text-xs);padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);border:1px solid #d4a574;
+    background:#fffaf5;color:#b86a28;cursor:pointer;transition:var(--transition-fast);
+  }
+  .intention-btn:hover{background:#fdf3e8}
+  .intention-tag{
+    font-size:var(--text-xs);padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);border:1px solid #d4a574;
+    background:#fffaf5;color:#b86a28;white-space:nowrap;
+  }
+
+  @media print{
+    .site-header,.btn,.filter-bar,.config-bar,.config-panel{display:none!important}
+    .match-card{break-inside:avoid}
+    .match-head{cursor:default}
+    .match-detail{display:block!important;border-color:#ccc;background:#fff}
+    .card{break-inside:avoid;border-color:#ccc}
+    body{font-size:13px;color:#000;background:#fff}
+    a{color:#000;text-decoration:none}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- 顶栏 -->
+  <header>
+    <div class="hrow">
+      <div class="logo">秋招画像系统 <span>· 岗位匹配</span></div>
+      <div class="spacer"></div>
+      <button class="btn btn-sm" @click="doExport" v-if="loaded">📥 导出</button>
+      <a href="index.html" class="btn">填写信息</a>
+      <a href="portrait.html" class="btn">查看画像</a>
+      <a href="intention.html" class="btn">意向岗位</a>
+      <a href="resume.html" class="btn">简历生成</a>
+    </div>
+  </header>
+
+  <!-- 空状态：无档案 -->
+  <div v-if="!loaded && !error" class="empty card">
+    <div class="empty-icon">📋</div>
+    <h2>暂无档案数据</h2>
+    <p>请先在「信息填写」页面完成基础信息录入，匹配引擎将基于你的画像推荐最合适的岗位。</p>
+    <div class="empty-steps">
+      <span class="empty-step"><span class="num">1</span>填写信息</span>
+      <span style="color:var(--ink3)">→</span>
+      <span class="empty-step"><span class="num">2</span>生成画像</span>
+      <span style="color:var(--ink3)">→</span>
+      <span class="empty-step active"><span class="num">3</span>岗位匹配</span>
+      <span style="color:var(--ink3)">→</span>
+      <span class="empty-step"><span class="num">4</span>投递管理</span>
+    </div>
+    <a href="index.html" class="btn btn-primary" style="margin-top:8px">去填写信息</a>
+  </div>
+
+  <!-- 错误状态 -->
+  <div v-if="error" class="empty card">
+    <div class="empty-icon">⚠</div>
+    <h2>加载失败</h2>
+    <p>{{ error }}</p>
+    <button class="btn btn-primary" style="margin-top:8px" @click="init">重试</button>
+  </div>
+
+  <!-- 加载中 -->
+  <div v-if="loading" class="loading">
+    <div class="spinner"></div>
+    <p style="margin-top:12px;font-size:14px">正在加载岗位库并匹配…</p>
+  </div>
+
+  <!-- 主内容 -->
+  <template v-if="loaded && results.length >= 0">
+    <!-- 统计栏 -->
+    <div class="card" style="padding:20px 24px">
+      <div class="stats-bar">
+        <div class="stat-item">
+          <div class="stat-num">{{ filteredResults.length }}</div>
+          <div class="stat-label">当前展示</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-num strong">{{ levelCounts.strong }}</div>
+          <div class="stat-label">强匹配 ≥75</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num medium">{{ levelCounts.medium }}</div>
+          <div class="stat-label">中匹配 60-74</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num weak">{{ levelCounts.weak }}</div>
+          <div class="stat-label">弱匹配 &lt;60</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-track">
+          <template v-for="(count, track, i) in trackCounts" :key="track">
+            <span v-if="i > 0"> · </span>
+            <span>{{ track }}</span> {{ count }}
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- 筛选栏 + 配置面板开关 -->
+    <div class="card" style="padding:18px 22px">
+      <div class="config-bar">
+        <span class="config-toggle" @click="toggleConfig">
+          {{ configOpen ? '▲ 收起参数' : '▼ 调整匹配参数' }}
+        </span>
+        <span style="font-size:12px;color:var(--ink3)">基于档案：{{ profileData.name || '未命名' }} · {{ profileData.graduationYear }}届 · {{ profileData.targetDirections?.join('、') || '未填方向' }}</span>
+      </div>
+
+      <!-- 配置面板 -->
+      <div class="config-panel" v-if="configOpen">
+        <div class="config-row">
+          <label>目标方向</label>
+          <div class="config-options">
+            <label class="config-option" v-for="d in directionOptions" :key="d">
+              <input type="checkbox" :value="d" v-model="tempParams.targetDirections">
+              <span>{{ d }}</span>
+            </label>
+          </div>
+        </div>
+        <div class="config-row">
+          <label>目标城市</label>
+          <div class="config-options">
+            <label class="config-option" v-for="c in cityOptions" :key="c">
+              <input type="checkbox" :value="c" v-model="tempParams.targetCities">
+              <span>{{ c }}</span>
+            </label>
+          </div>
+        </div>
+        <div class="config-row">
+          <label>毕业届次</label>
+          <div class="config-options">
+            <label class="config-option" v-for="y in ['2026','2027','2028','2029']" :key="y">
+              <input type="radio" :value="y" v-model="tempParams.graduationYear">
+              <span>{{ y }}届</span>
+            </label>
+          </div>
+        </div>
+        <div class="config-row">
+          <label>一票否决</label>
+          <div class="config-options">
+            <label class="config-option" v-for="db in dealBreakerOptions" :key="db">
+              <input type="checkbox" :value="db" v-model="tempParams.dealBreakers">
+              <span>{{ db }}</span>
+            </label>
+          </div>
+        </div>
+        <div class="config-row">
+          <label>类型倾向</label>
+          <div class="config-options">
+            <label class="config-option" v-for="t in trackWeightOptions" :key="t">
+              <input type="radio" :value="t" v-model="tempParams.trackWeight">
+              <span>{{ t }}</span>
+            </label>
+          </div>
+        </div>
+        <div class="config-actions">
+          <button class="btn btn-primary" @click="reMatch">🔄 重新匹配</button>
+          <button class="btn" @click="resetConfig">↺ 恢复档案设置</button>
+        </div>
+      </div>
+
+      <!-- 筛选器 -->
+      <div class="filter-bar" style="margin-top:10px;padding-top:14px;border-top:1px solid var(--line)">
+        <div class="filter-group">
+          <span class="filter-label">方向</span>
+          <div class="filter-options">
+            <span class="filter-chip" v-for="opt in filterOptions.track" :key="opt"
+              :class="{active: filters.track.includes(opt)}" @click="toggleFilter('track', opt)">
+              {{ opt }}
+            </span>
+          </div>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">公司</span>
+          <div class="filter-options">
+            <span class="filter-chip" v-for="opt in filterOptions.company" :key="opt"
+              :class="{active: filters.company.includes(opt)}" @click="toggleFilter('company', opt)">
+              {{ opt }}
+            </span>
+          </div>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">项目</span>
+          <div class="filter-options">
+            <span class="filter-chip" v-for="opt in filterOptions.program" :key="opt"
+              :class="{active: filters.program.includes(opt)}" @click="toggleFilter('program', opt)">
+              {{ opt }}
+            </span>
+          </div>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">地点</span>
+          <div class="filter-options">
+            <span class="filter-chip" v-for="opt in filterOptions.location" :key="opt"
+              :class="{active: filters.location.includes(opt)}" @click="toggleFilter('location', opt)">
+              {{ opt }}
+            </span>
+          </div>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">性质</span>
+          <div class="filter-options">
+            <span class="filter-chip" v-for="opt in filterOptions.empType" :key="opt"
+              :class="{active: filters.empType.includes(opt)}" @click="toggleFilter('empType', opt)">
+              {{ opt }}
+            </span>
+          </div>
+        </div>
+        <span class="filter-clear" v-if="hasActiveFilter" @click="clearFilters">清除筛选</span>
+      </div>
+    </div>
+
+    <!-- Deal-breaker 排除提示 -->
+    <div class="db-notice" v-if="excludedCount > 0">
+      <strong>已排除 {{ excludedCount }} 个岗位</strong>——命中了你设定的不可接受条件（{{ dealBreakerNames }}）。
+    </div>
+
+    <!-- 结果列表 -->
+    <div class="match-card" v-for="r in filteredResults" :key="r.job.id"
+      :class="[r.level, { expanded: expandedId === r.job.id }]"
+    >
+      <!-- 卡片头部 -->
+      <div class="match-head" @click="toggleExpand(r.job.id)">
+        <div class="match-head-top">
+          <span class="match-score" :class="r.level">{{ r.score }}</span>
+          <span class="match-title">{{ r.job.title }}</span>
+          <span class="match-company">{{ r.job.company }}</span>
+          <div class="apply-wrap" @click.stop>
+            <button
+              class="intention-btn"
+              v-if="!intentionMap[r.job.id]"
+              @click="addIntention(r.job.id)"
+              title="加入意向岗位，去优化简历"
+            >💡 意向</button>
+            <span v-else class="intention-tag" title="已在意向列表中">💡 已意向</span>
+            <span v-if="appliedMap[r.job.id]?.status" class="badge level-strong">{{ appliedStatusLabel(appliedMap[r.job.id].status) }}</span>
+            <select v-if="appliedMap[r.job.id]" class="apply-select" v-model="appliedMap[r.job.id].status" @change="saveApplied">
+              <option value="interested">感兴趣</option>
+              <option value="applied">已投递</option>
+              <option value="interviewing">面试中</option>
+              <option value="offer">已 offer</option>
+              <option value="rejected">已挂</option>
+            </select>
+            <button v-else class="apply-btn" @click="markApplied(r.job.id)">标记</button>
+          </div>
+        </div>
+        <div class="match-badges">
+          <span class="badge" :class="'level-' + r.level">
+            {{ r.level === 'strong' ? '强匹配' : r.level === 'medium' ? '中匹配' : '弱匹配' }}
+          </span>
+          <span class="badge" v-if="r.job.track">{{ r.job.track }}</span>
+          <span class="badge" v-if="r.job.program">{{ r.job.program }}</span>
+          <span class="badge" v-for="l in displayLocations(r.job)" :key="l">{{ l }}</span>
+          <span class="badge" v-if="r.job.employmentType">{{ r.job.employmentType }}</span>
+        </div>
+        <div class="match-score-bar">
+          <div class="match-score-fill" :class="r.level" :style="{ width: r.score + '%' }"></div>
+        </div>
+        <div class="match-meta">
+          <span class="reason-chip" v-for="reason in r.reasons.slice(0, 2)" :key="reason">{{ reason }}</span>
+          <span class="gap-chip" v-if="r.gaps.length">{{ r.gaps.length }} 项缺口</span>
+          <span class="expand-hint">{{ expandedId === r.job.id ? '收起 ▲' : '展开 ▼' }}</span>
+        </div>
+      </div>
+
+      <!-- 详情展开区 -->
+      <div class="match-detail">
+        <div class="detail-section">
+          <div class="detail-label">维度评分</div>
+          <div class="dim-grid">
+            <div class="dim-item" v-for="(val, key) in r.dimScores" :key="key">
+              <span class="dim-label">{{ dimLabels[key] }}</span>
+              <div class="dim-bar">
+                <div class="dim-fill" :class="dimLevel(val)" :style="{ width: val + '%' }"></div>
+              </div>
+              <span class="dim-val">{{ val }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="detail-section" v-if="r.reasons.length">
+          <div class="detail-label">为什么匹配</div>
+          <div class="match-meta">
+            <span class="reason-chip" v-for="reason in r.reasons" :key="reason">{{ reason }}</span>
+          </div>
+        </div>
+        <div class="detail-section" v-if="r.gaps.length">
+          <div class="detail-label">能力缺口</div>
+          <ul class="detail-resp" style="color:var(--warn)">
+            <li v-for="gap in r.gaps" :key="gap">{{ gap }}</li>
+          </ul>
+        </div>
+        <div class="detail-section" v-if="r.job.responsibilities && r.job.responsibilities.length">
+          <div class="detail-label">岗位职责</div>
+          <ul class="detail-resp">
+            <li v-for="resp in r.job.responsibilities" :key="resp">{{ resp }}</li>
+          </ul>
+        </div>
+        <div class="detail-section" v-if="r.job.keywords && r.job.keywords.length">
+          <div class="detail-label">关键词</div>
+          <div class="detail-kw">
+            <span class="kw-tag" v-for="kw in r.job.keywords" :key="kw">{{ kw }}</span>
+          </div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-meta">
+            <span v-if="r.job.business"><strong>业务线：</strong>{{ r.job.business }}</span>
+            <span v-if="r.job.crawlDate"><strong>数据日期：</strong>{{ r.job.crawlDate }}</span>
+          </div>
+          <a :href="r.job.url" target="_blank" rel="noopener" class="detail-link">查看原始 JD →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 空结果 -->
+    <div v-if="filteredResults.length === 0 && loaded" class="empty card" style="padding:48px 20px">
+      <div class="empty-icon">🔍</div>
+      <h2>当前筛选条件下无匹配岗位</h2>
+      <p>请尝试清除部分筛选条件，或调整匹配参数后重新匹配。</p>
+      <button class="btn btn-primary" style="margin-top:8px" @click="clearFilters">清除筛选</button>
+    </div>
+  </template>
+</div>
+
+<script type="module">
+import { analyzePortrait } from './src/portrait-engine.js';
+import {
+  matchAll, applyDealBreakers, normalizeLocation,
+} from './src/match-engine.js';
+import { ExperienceMiner } from './src/experience-miner.js';
+
+const { createApp } = Vue;
+
+const LS_KEY = 'qiuzhao_profile_v4';
+const LS_APPLIED = 'qiuzhao_applied_v1';
+
+const DIRECTION_OPTIONS = [
+  '数据分析', '数据开发', 'BI/商业分析', '数据产品经理',
+  '产品经理', '产品运营', '用户研究',
+  '后端开发', '前端开发', '算法工程师', '测试开发',
+  '项目管理', '咨询', '战略投资',
+  '技术支持', '解决方案'
+];
+const CITY_OPTIONS = ['北京','上海','深圳','广州','杭州','成都','武汉','南京','西安','苏州','天津','重庆','合肥','长沙','青岛','大连','不限'];
+const DEALBREAKER_OPTIONS = ['外包/驻场','长期出差','三班倒/夜班','销售性质','强制加班文化','需要垫资','试用期超过6个月','无五险一金'];
+const TRACK_WEIGHT_OPTIONS = ['强烈倾向互联网','略倾向互联网','两边都行','略倾向央国企','强烈倾向央国企'];
+
+const STATUS_LABELS = {
+  interested: '感兴趣', applied: '已投递', interviewing: '面试中', offer: '已offer', rejected: '已挂',
+};
+
+createApp({
+  data() {
+    return {
+      loaded: false,
+      loading: false,
+      error: '',
+      profileData: {},
+      portrait: null,
+      results: [],
+      allJobs: [],
+      excludedCount: 0,
+      dealBreakerNames: '',
+      expandedId: null,
+      dimLabels: {
+        direction: '方向', skills: '技能', location: '城市',
+        program: '届次', company: '企业', experience: '经验',
+      },
+      // 筛选器
+      filters: { track: [], company: [], program: [], location: [], empType: [] },
+      // 配置面板
+      configOpen: false,
+      tempParams: null,
+      // 标记投递
+      appliedMap: {},
+      // 意向岗位
+      intentionMap: {},
+      // 选项常量
+      directionOptions: DIRECTION_OPTIONS,
+      cityOptions: CITY_OPTIONS,
+      dealBreakerOptions: DEALBREAKER_OPTIONS,
+      trackWeightOptions: TRACK_WEIGHT_OPTIONS,
+    };
+  },
+  computed: {
+    levelCounts() {
+      const c = { strong: 0, medium: 0, weak: 0 };
+      this.filteredResults.forEach(r => c[r.level]++);
+      return c;
+    },
+    trackCounts() {
+      const c = {};
+      this.filteredResults.forEach(r => { c[r.job.track] = (c[r.job.track] || 0) + 1; });
+      return c;
+    },
+    filterOptions() {
+      const opts = { track: new Set(), company: new Set(), program: new Set(), location: new Set(), empType: new Set() };
+      this.results.forEach(r => {
+        if (r.job.track) opts.track.add(r.job.track);
+        if (r.job.company) opts.company.add(r.job.company);
+        if (r.job.program) opts.program.add(r.job.program);
+        if (r.job.employmentType) opts.empType.add(r.job.employmentType);
+        (r.job.locations || []).forEach(l => {
+          const nl = normalizeLocation(l);
+          if (nl) opts.location.add(nl);
+        });
+      });
+      return {
+        track: [...opts.track],
+        company: [...opts.company],
+        program: [...opts.program],
+        location: [...opts.location].sort(),
+        empType: [...opts.empType],
+      };
+    },
+    filteredResults() {
+      return this.results.filter(r => {
+        if (this.filters.track.length && !this.filters.track.includes(r.job.track)) return false;
+        if (this.filters.company.length && !this.filters.company.includes(r.job.company)) return false;
+        if (this.filters.program.length && !this.filters.program.includes(r.job.program)) return false;
+        if (this.filters.empType.length && !this.filters.empType.includes(r.job.employmentType)) return false;
+        if (this.filters.location.length) {
+          const jobLocs = new Set((r.job.locations || []).map(normalizeLocation));
+          const hit = this.filters.location.some(l => jobLocs.has(l));
+          if (!hit) return false;
+        }
+        return true;
+      });
+    },
+    hasActiveFilter() {
+      return Object.values(this.filters).some(arr => arr.length > 0);
+    },
+  },
+  methods: {
+    async init() {
+      this.error = '';
+      this.loading = true;
+
+      let raw;
+      try {
+        raw = localStorage.getItem(LS_KEY) || localStorage.getItem('qiuzhao_profile_v3');
+      } catch { raw = null; }
+
+      if (!raw) {
+        this.loading = false;
+        this.loaded = false;
+        return;
+      }
+
+      try {
+        this.profileData = window.QZ_SCHEMA
+          ? window.QZ_SCHEMA.migrate(JSON.parse(raw))
+          : JSON.parse(raw);
+
+        this.portrait = analyzePortrait(this.profileData);
+
+        const resp = await fetch('./jobs/jd-library.json');
+        if (!resp.ok) throw new Error(`JD 库加载失败 (HTTP ${resp.status})`);
+        const lib = await resp.json();
+        this.allJobs = lib.jobs || [];
+
+        this.runMatch(this.profileData);
+        this.initTempParams();
+      this.loadApplied();
+      this.loadIntentionState();
+      this.loaded = true;
+      } catch (e) {
+        console.error('match init error:', e);
+        let msg = e.message || '未知错误';
+        if (window.location.protocol === 'file:' && msg.includes('fetch')) {
+          msg = '无法从本地文件协议加载岗位数据。请使用本地 HTTP 服务器打开本页面，例如运行：python -m http.server 8765，然后访问 http://localhost:8765/match.html';
+        }
+        this.error = msg;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    runMatch(profile) {
+      const { kept, excluded } = applyDealBreakers(this.allJobs, profile);
+      this.excludedCount = excluded.length;
+      if (excluded.length > 0) {
+        this.dealBreakerNames = [...new Set(excluded.map(e => e.rule))].join('、');
+      } else {
+        this.dealBreakerNames = '';
+      }
+      this.results = matchAll(kept, profile, this.portrait);
+    },
+
+    // ── 展开/收起 ──
+    toggleExpand(id) {
+      this.expandedId = this.expandedId === id ? null : id;
+    },
+
+    // ── 筛选器 ──
+    toggleFilter(category, value) {
+      const arr = this.filters[category];
+      const idx = arr.indexOf(value);
+      if (idx >= 0) arr.splice(idx, 1);
+      else arr.push(value);
+    },
+    clearFilters() {
+      this.filters.track = [];
+      this.filters.company = [];
+      this.filters.program = [];
+      this.filters.location = [];
+      this.filters.empType = [];
+    },
+
+    // ── 配置面板 ──
+    toggleConfig() {
+      this.configOpen = !this.configOpen;
+      if (this.configOpen && !this.tempParams) this.initTempParams();
+    },
+    initTempParams() {
+      this.tempParams = {
+        targetDirections: [...(this.profileData.targetDirections || [])],
+        targetCities: [...(this.profileData.targetCities || [])],
+        graduationYear: this.profileData.graduationYear || '',
+        dealBreakers: [...(this.profileData.dealBreakers || [])],
+        trackWeight: this.profileData.trackWeight || '',
+      };
+    },
+    resetConfig() {
+      this.initTempParams();
+    },
+    reMatch() {
+      if (!this.tempParams) return;
+      const merged = { ...this.profileData, ...this.tempParams };
+      this.runMatch(merged);
+      this.clearFilters();
+      this.expandedId = null;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    // ── 标记投递 ──
+    markApplied(jobId) {
+      this.appliedMap[jobId] = { status: 'interested', markedAt: new Date().toISOString() };
+      this.saveApplied();
+    },
+    saveApplied() {
+      try {
+        localStorage.setItem(LS_APPLIED, JSON.stringify(this.appliedMap));
+      } catch (e) { console.error('save applied failed', e); }
+    },
+    loadApplied() {
+      try {
+        const raw = localStorage.getItem(LS_APPLIED);
+        if (raw) this.appliedMap = JSON.parse(raw);
+      } catch (e) { console.error('load applied failed', e); }
+    },
+    // ── 意向岗位 ──
+    addIntention(jobId) {
+      const job = this.allJobs.find(j => j.id === jobId);
+      if (!job) return;
+      ExperienceMiner.addIntention(job);
+      this.intentionMap[jobId] = true;
+      // 可选：同时标记为 interested
+      if (!this.appliedMap[jobId]) {
+        this.appliedMap[jobId] = { status: 'interested', markedAt: new Date().toISOString() };
+        this.saveApplied();
+      }
+      alert(`已加入意向岗位：${job.company} · ${job.title}\n去「意向岗位」页面开始经历挖掘和简历优化。`);
+    },
+    loadIntentionState() {
+      const intentions = ExperienceMiner.getIntentions();
+      this.intentionMap = {};
+      intentions.forEach(j => { this.intentionMap[j.jobId] = true; });
+    },
+    appliedStatusLabel(status) {
+      return STATUS_LABELS[status] || status;
+    },
+
+    // ── 导出 ──
+    doExport() {
+      const payload = {
+        _exportVersion: 1,
+        _exportedAt: new Date().toISOString(),
+        profileName: this.profileData.name || '',
+        profileGraduationYear: this.profileData.graduationYear || '',
+        filterSummary: {
+          totalMatched: this.results.length,
+          displayed: this.filteredResults.length,
+          excluded: this.excludedCount,
+        },
+        jobs: this.filteredResults.map(r => ({
+          id: r.job.id,
+          company: r.job.company,
+          title: r.job.title,
+          track: r.job.track,
+          program: r.job.program,
+          locations: r.job.locations,
+          score: r.score,
+          level: r.level,
+          reasons: r.reasons,
+          gaps: r.gaps,
+          url: r.job.url,
+          appliedStatus: this.appliedMap[r.job.id]?.status || null,
+        })),
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `岗位匹配_${this.profileData.name || '未命名'}_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+
+    // ── 工具 ──
+    displayLocations(job) {
+      const raw = job.locations || [];
+      if (raw.length === 0) return [];
+      const shown = raw.slice(0, 3);
+      if (raw.length > 3) shown.push(`+${raw.length - 3}`);
+      return shown;
+    },
+    dimLevel(val) {
+      if (val >= 75) return 'strong';
+      if (val >= 50) return 'medium';
+      return 'weak';
+    },
+  },
+  mounted() {
+    this.init();
+  },
+}).mount('#app');
+</script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+# ══════════════════════════════════════════════════════════
+#  个人数据隔离 —— 请勿删除或修改以下规则
+#
+#  本项目会收集姓名、手机、邮箱、身份证号、家庭情况等个人信息。
+#  这些数据只应存在于用户自己的浏览器和本地文件中，
+#  绝不能进入 Git 仓库（公开仓库 = 公开数据，且 Git 历史无法真正删除）。
+#
+#  ⚠️ 如果你 fork 了本项目，请保留这些规则。
+# ══════════════════════════════════════════════════════════
+
+# 导出的个人档案（本系统生成的文件名格式）
+秋招档案_*.json
+qiuzhao_profile*.json
+*.profile.json
+profile-*.json
+
+# 用户数据目录
+userdata/
+data/
+私人/
+my-data/
+
+# 生成的简历文件
+resume/*.pdf
+resume/*.docx
+resume/*.md
+!resume/README.md
+!resume/template*.md
+
+# 岗位与投递记录（含公司名、JD、面试记录等）
+jobs/*.json
+!jobs/example*.json
+!jobs/README.md
+applications/*/
+!applications/README.md
+tracker.csv
+*.tracker.csv
+
+# 画像输出
+portrait*.json
+
+# ── 常规忽略 ──
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+node_modules/
+.vscode/
+.idea/
+*.swp
+*~
+.env
+.env.*

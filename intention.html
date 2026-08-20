@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>秋招画像系统 · 意向岗位</title>
+<link rel="stylesheet" href="./src/design-system.css">
+<script src="./vendor/vue.global.prod.js"></script>
+<script src="./src/schema.js"></script>
+<style>
+  #app{max-width:1180px;margin:0 auto;padding:0 var(--space-6) var(--space-16)}
+  header{margin:0 calc(var(--space-6) * -1) var(--space-6);padding:var(--space-3) var(--space-6)}
+
+  .btn-warn{background:var(--warn);color:#fff;border-color:var(--warn)}
+  .btn-warn:hover{background:#9a7609}
+  .btn-danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+  .btn-danger:hover{background:#8a3e2f}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  .page-title{font-size:var(--text-lg);font-weight:600;margin-bottom:var(--space-5);display:flex;align-items:center;gap:var(--space-2)}
+  .page-title .count{font-size:var(--text-sm);font-weight:500;color:var(--ink-3);background:var(--gray-100);padding:2px 10px;border-radius:var(--radius-full)}
+
+  .empty{text-align:center;padding:var(--space-16) var(--space-6);color:var(--ink-3)}
+  .empty h2{font-size:var(--text-lg);color:var(--ink);margin-bottom:var(--space-2)}
+  .empty-icon{font-size:56px;margin-bottom:var(--space-4);opacity:.35}
+  .empty-steps{display:flex;gap:var(--space-5);justify-content:center;margin:var(--space-6) 0;flex-wrap:wrap}
+  .empty-step{font-size:var(--text-sm);color:var(--ink-2);display:flex;align-items:center;gap:var(--space-1)}
+  .empty-step .num{width:22px;height:22px;border-radius:50%;background:var(--brand-50);color:var(--brand-600);display:inline-flex;align-items:center;justify-content:center;font-size:var(--text-xs);font-weight:600}
+  .empty-step.active .num{background:var(--brand-600);color:#fff}
+
+  .intention-list{display:flex;flex-direction:column;gap:var(--space-3)}
+  .intention-card{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);
+    padding:var(--space-5) var(--space-6);transition:var(--transition-normal);
+    box-shadow:var(--card-shadow);
+  }
+  .intention-card:hover{box-shadow:var(--card-shadow-hover);border-color:var(--gray-300)}
+
+  .intention-card-top{display:flex;align-items:flex-start;gap:var(--space-3);flex-wrap:wrap}
+  .intention-score{font-size:var(--text-lg);font-weight:700;letter-spacing:-0.04em;min-width:36px;text-align:right}
+  .intention-score.strong{color:var(--brand-600)}
+  .intention-score.medium{color:var(--warn)}
+  .intention-score.weak{color:var(--gray-300)}
+
+  .intention-body{flex:1;min-width:240px}
+  .intention-title{font-size:var(--text-md);font-weight:600;margin-bottom:var(--space-1)}
+  .intention-meta{font-size:var(--text-sm);color:var(--ink-2);display:flex;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-2)}
+  .intention-meta span{display:flex;align-items:center;gap:4px}
+
+  .intention-badges{display:flex;gap:var(--space-1);flex-wrap:wrap;margin-bottom:var(--space-3)}
+  .badge{font-size:var(--text-xs);padding:3px 10px;border-radius:var(--radius-md);background:var(--gray-100);color:var(--ink-2);border:1px solid var(--gray-200)}
+  .badge.level-strong{background:var(--brand-50);color:var(--brand-600);border-color:var(--brand-200)}
+  .badge.level-medium{background:var(--warn-soft);color:var(--warn);border-color:#f0dcc0}
+  .badge.level-weak{background:var(--gray-100);color:var(--gray-400);border-color:var(--gray-200)}
+
+  .mining-progress{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-3)}
+  .mining-bar{flex:1;min-width:120px;max-width:200px;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+  .mining-fill{height:100%;border-radius:3px;transition:width .3s ease}
+  .mining-fill.covered{background:var(--brand-600)}
+  .mining-fill.mineable{background:var(--warn)}
+  .mining-fill.missing{background:var(--gray-300)}
+  .mining-text{font-size:var(--text-xs);color:var(--ink-3)}
+  .mining-counts{display:flex;gap:var(--space-2);font-size:var(--text-xs)}
+  .mining-counts .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:3px}
+  .dot-covered{background:var(--brand-600)}
+  .dot-mineable{background:var(--warn)}
+  .dot-missing{background:var(--gray-300)}
+
+  .intention-actions{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .intention-actions .btn{font-size:var(--text-xs);padding:5px 12px}
+
+  .mining-panel{display:none;margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid var(--border)}
+  .mining-panel.active{display:block}
+  .mining-panel-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-5)}
+  @media(max-width:900px){.mining-panel-grid{grid-template-columns:1fr}}
+
+  .mining-column{background:var(--gray-50);border-radius:var(--radius-md);padding:var(--space-4)}
+  .mining-column-title{font-size:var(--text-xs);font-weight:600;color:var(--ink-3);margin-bottom:var(--space-3);letter-spacing:.3px}
+
+  .jd-keywords{display:flex;gap:var(--space-1);flex-wrap:wrap}
+  .jd-keyword{font-size:var(--text-xs);padding:3px 10px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border);color:var(--ink-2)}
+
+  .tier-section{margin-bottom:var(--space-3)}
+  .tier-title{font-size:var(--text-xs);font-weight:600;margin-bottom:var(--space-1);display:flex;align-items:center;gap:var(--space-1)}
+  .tier-item{font-size:var(--text-xs);color:var(--ink-2);padding:var(--space-1) var(--space-2);background:var(--card);border-radius:var(--radius-sm);margin-bottom:4px;border-left:3px solid transparent}
+  .tier-item.covered{border-left-color:var(--brand-600)}
+  .tier-item.mineable{border-left-color:var(--warn)}
+  .tier-item.missing{border-left-color:var(--gray-300)}
+  .tier-item .reason{font-size:11px;color:var(--ink-3);margin-top:2px}
+  .tier-item .matched-exp{font-size:11px;color:var(--brand-600);margin-top:3px}
+  .tier-item .mined-bullet-inline{font-size:var(--text-xs);color:var(--ink-2);margin-top:var(--space-1);padding:var(--space-2) var(--space-3);background:var(--gray-100);border-radius:var(--radius-sm);border-left:3px solid var(--brand-600);line-height:1.6}
+  .tier-item .mined-label{font-size:11px;color:var(--brand-600);font-weight:500;margin-right:4px}
+  .tier-btn{font-size:11px;padding:3px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);cursor:pointer;margin-top:4px}
+  .tier-btn:hover{border-color:var(--brand-600);color:var(--brand-600)}
+  .tier-btn:disabled{opacity:.4;cursor:not-allowed}
+
+  .chat-area{background:var(--card);border-radius:var(--radius-md);padding:var(--space-3);min-height:260px;display:flex;flex-direction:column;box-shadow:var(--card-shadow-inset)}
+  .chat-messages{flex:1;overflow-y:auto;max-height:360px;margin-bottom:var(--space-2)}
+  .chat-message{margin-bottom:var(--space-3);animation:fadeIn .2s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  .chat-message.system{font-size:var(--text-xs);color:var(--ink-2);background:var(--gray-100);padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);border-left:3px solid var(--brand-600)}
+  .chat-message.user{margin-left:var(--space-5);font-size:var(--text-xs);color:var(--ink);background:var(--brand-50);padding:var(--space-2) var(--space-3);border-radius:var(--radius-md)}
+  .chat-input-area{margin-top:auto}
+  .chat-input{width:100%;padding:var(--space-2) var(--space-3);border:1px solid var(--border);border-radius:var(--radius-md);font-size:var(--text-sm);font-family:inherit;resize:vertical;min-height:60px}
+  .chat-actions{display:flex;gap:var(--space-2);margin-top:var(--space-2);flex-wrap:wrap}
+  .choice-group{display:flex;flex-direction:column;gap:var(--space-1);margin-top:var(--space-1)}
+  .choice-btn{text-align:left;font-size:var(--text-xs);padding:var(--space-2) var(--space-3);border:1px solid var(--border);border-radius:var(--radius-md);background:var(--card);cursor:pointer;transition:var(--transition-fast)}
+  .choice-btn:hover{border-color:var(--brand-600);background:var(--brand-50)}
+  .choice-btn.selected{background:var(--brand-600);color:#fff;border-color:var(--brand-600)}
+
+  .bullet-preview{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-3);margin-top:var(--space-3);box-shadow:var(--card-shadow-inset)}
+  .bullet-text{font-size:var(--text-sm);line-height:1.8;color:var(--ink);margin-bottom:var(--space-2);background:var(--gray-50);padding:var(--space-3);border-radius:var(--radius-md);border-left:3px solid var(--brand-600)}
+  .bullet-actions{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-2)}
+  .bullet-editor{width:100%;padding:var(--space-2) var(--space-3);border:1px solid var(--border);border-radius:var(--radius-md);font-size:var(--text-sm);font-family:inherit;min-height:80px;line-height:1.7}
+
+  .eval-card{background:var(--card);border-radius:var(--radius-md);padding:var(--space-3);margin-top:var(--space-3);box-shadow:var(--card-shadow-inset)}
+  .eval-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2)}
+  .eval-total{font-size:var(--text-lg);font-weight:700;color:var(--brand-600)}
+  .eval-total.mid{color:var(--warn)}
+  .eval-total.low{color:var(--danger)}
+  .eval-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--space-1)}
+  .eval-item{text-align:center;padding:var(--space-2) var(--space-1);background:var(--gray-50);border-radius:var(--radius-sm)}
+  .eval-item .label{font-size:10px;color:var(--ink-3);margin-bottom:2px}
+  .eval-item .score{font-size:var(--text-sm);font-weight:600}
+  .eval-item .score.high{color:var(--brand-600)}
+  .eval-item .score.mid{color:var(--warn)}
+  .eval-item .score.low{color:var(--danger)}
+  .eval-comment{font-size:11px;color:var(--ink-3);margin-top:var(--space-2);line-height:1.5}
+
+  .exp-selector{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:var(--space-2);margin-bottom:var(--space-2)}
+  .exp-option{font-size:var(--text-xs);padding:6px 8px;border-radius:var(--radius-sm);cursor:pointer;margin-bottom:4px;border:1px solid transparent}
+  .exp-option:hover{background:var(--brand-50)}
+  .exp-option.selected{background:var(--brand-50);border-color:var(--brand-600)}
+
+  .toast{
+    position:fixed;bottom:var(--space-6);left:50%;transform:translateX(-50%) translateY(100px);
+    background:var(--ink);color:#fff;padding:var(--space-2) var(--space-5);border-radius:var(--radius-md);font-size:var(--text-sm);
+    opacity:0;transition:all .3s ease;z-index:100;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media print{
+    .site-header,.btn,.intention-actions,.mining-panel{display:none!important}
+    .intention-card{break-inside:avoid;margin-bottom:var(--space-2);border-color:#ccc}
+    body{font-size:13px;color:#000;background:#fff}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- 顶栏 -->
+  <header>
+    <div class="hrow">
+      <div class="logo">秋招画像系统 <span>· 意向岗位</span></div>
+      <div class="spacer"></div>
+      <a href="match.html" class="btn">岗位匹配</a>
+      <a href="index.html" class="btn">填写信息</a>
+      <a href="resume.html" class="btn">简历生成</a>
+      <a href="portrait.html" class="btn">查看画像</a>
+    </div>
+  </header>
+
+  <!-- 页面标题 -->
+  <div class="page-title">
+    意向岗位
+    <span class="count" v-if="intentions.length > 0">{{ intentions.length }} 个</span>
+  </div>
+
+  <!-- 空状态 -->
+  <div v-if="intentions.length === 0 && loaded" class="empty card">
+    <div class="empty-icon">📋</div>
+    <h2>暂无意向岗位</h2>
+    <p>请先回到「岗位匹配」页面，对感兴趣的岗位点击「💡 意向」按钮。</p>
+    <p>这里会列出你选中的岗位，帮你逐个挖掘经历、优化简历。</p>
+    <div class="empty-steps">
+      <div class="empty-step active"><span class="num">1</span> 浏览岗位匹配</div>
+      <span>→</span>
+      <div class="empty-step"><span class="num">2</span> 加入意向</div>
+      <span>→</span>
+      <div class="empty-step"><span class="num">3</span> 经历挖掘</div>
+      <span>→</span>
+      <div class="empty-step"><span class="num">4</span> 生成简历</div>
+    </div>
+    <a href="match.html" class="btn btn-primary">去岗位匹配 →</a>
+  </div>
+
+  <!-- 加载中 -->
+  <div v-if="loading" class="empty" style="padding:60px 20px">
+    <div class="empty-icon">⏳</div>
+    <h2>正在加载意向岗位...</h2>
+  </div>
+
+  <!-- 错误 -->
+  <div v-if="error" class="empty" style="padding:60px 20px">
+    <div class="empty-icon">⚠️</div>
+    <h2>加载失败</h2>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- 意向列表 -->
+  <div v-if="intentions.length > 0 && loaded" class="intention-list">
+    <div
+      class="intention-card"
+      v-for="item in intentions"
+      :key="item.jobId"
+      :class="{ expanded: expandedJobId === item.jobId }"
+    >
+      <!-- 卡片顶部 -->
+      <div class="intention-card-top">
+        <span class="intention-score" :class="item.level">{{ item.score }}</span>
+        <div class="intention-body">
+          <div class="intention-title">{{ item.title }}</div>
+          <div class="intention-meta">
+            <span>{{ item.company }}</span>
+            <span v-if="item.track">· {{ item.track }}</span>
+            <span v-if="item.program">· {{ item.program }}</span>
+            <span v-if="item.locations?.length">· {{ item.locations.join(' / ') }}</span>
+          </div>
+          <div class="intention-badges">
+            <span class="badge" :class="'level-' + item.level">
+              {{ item.level === 'strong' ? '强匹配' : item.level === 'medium' ? '中匹配' : '弱匹配' }}
+            </span>
+            <span class="badge" v-if="item.track">{{ item.track }}</span>
+            <span class="badge" v-if="item.employmentType">{{ item.employmentType }}</span>
+          </div>
+
+          <!-- 挖掘进度 -->
+          <div class="mining-progress" v-if="item.analysis">
+            <div class="mining-bar">
+              <div class="mining-fill covered" :style="{width: (item.analysis.covered / item.analysis.total * 100) + '%'}"></div>
+            </div>
+            <span class="mining-text">挖掘进度</span>
+            <div class="mining-counts">
+              <span><span class="dot dot-covered"></span>已覆盖 {{ item.analysis.covered }}</span>
+              <span><span class="dot dot-mineable"></span>可挖掘 {{ item.analysis.mineable }}</span>
+              <span><span class="dot dot-missing"></span>缺失 {{ item.analysis.missing }}</span>
+            </div>
+          </div>
+
+          <!-- 操作按钮 -->
+          <div class="intention-actions">
+            <button class="btn btn-primary" @click="openMiningPanel(item)">
+              {{ expandedJobId === item.jobId ? '收起挖掘' : '🔍 经历挖掘' }}
+            </button>
+            <button class="btn" @click="removeIntention(item.jobId)">移除意向</button>
+            <a v-if="item.url" :href="item.url" target="_blank" rel="noopener" class="btn">查看JD →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 挖掘面板（三栏布局） -->
+      <div class="mining-panel" :class="{ active: expandedJobId === item.jobId }">
+        <div class="mining-panel-grid">
+          <!-- 左栏：JD 核心要求 -->
+          <div class="mining-column">
+            <div class="mining-column-title">📋 JD 核心要求</div>
+            <div class="jd-keywords" v-if="item.job?.keywords">
+              <span class="jd-keyword" v-for="kw in item.job.keywords" :key="kw">{{ kw }}</span>
+            </div>
+            <div v-if="item.job?.responsibilities" style="margin-top:12px">
+              <div class="mining-column-title">职责描述</div>
+              <div style="font-size:12.5px;color:var(--ink2);line-height:1.8">
+                <p v-for="(resp, i) in item.job.responsibilities" :key="i">· {{ resp }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 中栏：三档分析 -->
+          <div class="mining-column">
+            <div class="mining-column-title">📊 经历覆盖分析</div>
+            <div v-if="item.analysis?.details">
+              <div class="tier-section">
+                <div class="tier-title">🟢 已覆盖（{{ item.analysis.covered }}）</div>
+                <div class="tier-item covered" v-for="d in item.analysis.details.filter(x=>x.tier==='covered')" :key="d.keyword">
+                  <strong>{{ d.keyword }}</strong>
+                  <div class="reason">{{ d.reason }}</div>
+                  <div v-if="d.minedBullet" class="mined-bullet-inline">
+                    <span class="mined-label">文案：</span>{{ d.minedBullet }}
+                  </div>
+                </div>
+              </div>
+              <div class="tier-section">
+                <div class="tier-title">🟡 可挖掘（{{ item.analysis.mineable }}）</div>
+                <div class="tier-item mineable" v-for="d in item.analysis.details.filter(x=>x.tier==='mineable')" :key="d.keyword">
+                  <strong>{{ d.keyword }}</strong>
+                  <div class="reason">{{ d.reason }}</div>
+                  <div class="matched-exp" v-if="d.matchedExperiences?.length">
+                    关联经历：{{ d.matchedExperiences.map(e=>e.title).join('、') }}
+                  </div>
+                  <button
+                    class="tier-btn"
+                    @click="startMining(item, d)"
+                    :disabled="currentSession && currentSession.keyword === d.keyword && currentSession.jobId === item.jobId"
+                  >
+                    {{ currentSession && currentSession.keyword === d.keyword && currentSession.jobId === item.jobId ? '挖掘中…' : '开始挖掘' }}
+                  </button>
+                </div>
+              </div>
+              <div class="tier-section">
+                <div class="tier-title">🔴 完全缺失（{{ item.analysis.missing }}）</div>
+                <div class="tier-item missing" v-for="d in item.analysis.details.filter(x=>x.tier==='missing')" :key="d.keyword">
+                  <strong>{{ d.keyword }}</strong>
+                  <div class="reason">{{ d.reason }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 右栏：对话区 -->
+          <div class="mining-column">
+            <div class="mining-column-title">
+              💬 经历挖掘对话
+              <span v-if="currentSession && currentSession.jobId === item.jobId" style="color:var(--accent);font-size:11px;margin-left:6px">
+                · {{ currentSession.keyword }}
+              </span>
+            </div>
+
+            <!-- 状态 1：未开始 -->
+            <div class="chat-area" v-if="!currentSession || currentSession.jobId !== item.jobId">
+              <p style="font-size:12.5px;color:var(--ink3);text-align:center;padding:40px 0">
+                点击左侧「可挖掘」项目中的「开始挖掘」按钮，<br>开启对话式经历挖掘。
+              </p>
+            </div>
+
+            <!-- 状态 2：对话中 -->
+            <div class="chat-area" v-else-if="miningState === 'chat'">
+              <div class="chat-messages">
+                <div
+                  class="chat-message"
+                  :class="msg.role"
+                  v-for="msg in chatHistory"
+                  :key="msg.id"
+                >
+                  {{ msg.text }}
+                </div>
+              </div>
+
+              <div class="chat-input-area" v-if="currentQuestion">
+                <!-- 选择题 -->
+                <div v-if="currentQuestion.type === 'choice'" class="choice-group">
+                  <button
+                    class="choice-btn"
+                    :class="{ selected: currentAnswerInput === opt }"
+                    v-for="opt in currentQuestion.options"
+                    :key="opt"
+                    @click="currentAnswerInput = opt; submitAnswer()"
+                  >
+                    {{ opt }}
+                  </button>
+                </div>
+                <!-- 文本题 -->
+                <div v-else>
+                  <textarea
+                    class="chat-input"
+                    v-model="currentAnswerInput"
+                    :placeholder="'请输入你的回答…'"
+                    @keydown.ctrl.enter="submitAnswer"
+                  ></textarea>
+                  <div class="chat-actions">
+                    <button class="btn btn-primary" @click="submitAnswer" :disabled="!currentAnswerInput.trim()">
+                      提交回答
+                    </button>
+                    <button class="btn" @click="skipQuestion">跳过</button>
+                    <button class="btn btn-danger" @click="cancelMining">放弃</button>
+                  </div>
+                </div>
+              </div>
+
+              <div v-else style="text-align:center;padding:20px 0">
+                <p style="font-size:12px;color:var(--ink3)">正在整理你的回答…</p>
+              </div>
+            </div>
+
+            <!-- 状态 3：生成结果 -->
+            <div class="chat-area" v-else-if="miningState === 'result'">
+              <div style="font-size:12px;color:var(--ink3);margin-bottom:8px">✅ 已生成简历文案</div>
+
+              <!-- 编辑模式 -->
+              <div v-if="isEditingBullet">
+                <textarea class="bullet-editor" v-model="editedBulletText"></textarea>
+                <div class="bullet-actions">
+                  <button class="btn btn-primary" @click="saveEditedBullet">保存修改</button>
+                  <button class="btn" @click="isEditingBullet = false">取消</button>
+                </div>
+              </div>
+
+              <!-- 展示模式 -->
+              <div v-else>
+                <div class="bullet-text">{{ generatedBullet }}</div>
+                <div class="bullet-actions">
+                  <button class="btn btn-primary" @click="adoptBullet">✅ 采纳并保存</button>
+                  <button class="btn" @click="isEditingBullet = true; editedBulletText = generatedBullet">✏️ 编辑</button>
+                  <button class="btn" @click="regenerateBullet">🔄 重新生成</button>
+                  <button class="btn btn-danger" @click="cancelMining">放弃</button>
+                </div>
+              </div>
+
+              <!-- 五维评估 -->
+              <div class="eval-card" v-if="evaluation">
+                <div class="eval-header">
+                  <span style="font-size:12px;font-weight:600;color:var(--ink3)">五维评估</span>
+                  <span class="eval-total" :class="evaluation.level">{{ evaluation.total }} / 100</span>
+                </div>
+                <div class="eval-grid">
+                  <div class="eval-item">
+                    <div class="label">相关性</div>
+                    <div class="score" :class="evaluation.relevance.score >= 16 ? 'high' : evaluation.relevance.score >= 12 ? 'mid' : 'low'">{{ evaluation.relevance.score }}</div>
+                  </div>
+                  <div class="eval-item">
+                    <div class="label">量化</div>
+                    <div class="score" :class="evaluation.quantification.score >= 16 ? 'high' : evaluation.quantification.score >= 12 ? 'mid' : 'low'">{{ evaluation.quantification.score }}</div>
+                  </div>
+                  <div class="eval-item">
+                    <div class="label">影响力</div>
+                    <div class="score" :class="evaluation.impact.score >= 16 ? 'high' : evaluation.impact.score >= 12 ? 'mid' : 'low'">{{ evaluation.impact.score }}</div>
+                  </div>
+                  <div class="eval-item">
+                    <div class="label">专业性</div>
+                    <div class="score" :class="evaluation.professionalism.score >= 16 ? 'high' : evaluation.professionalism.score >= 12 ? 'mid' : 'low'">{{ evaluation.professionalism.score }}</div>
+                  </div>
+                  <div class="eval-item">
+                    <div class="label">可读性</div>
+                    <div class="score" :class="evaluation.readability.score >= 16 ? 'high' : evaluation.readability.score >= 12 ? 'mid' : 'low'">{{ evaluation.readability.score }}</div>
+                  </div>
+                </div>
+                <div class="eval-comment">
+                  {{ evaluation.relevance.comment }}；{{ evaluation.quantification.comment }}；{{ evaluation.impact.comment }}
+                </div>
+              </div>
+            </div>
+
+            <!-- 状态 4：已保存 -->
+            <div class="chat-area" v-else-if="miningState === 'saved'">
+              <div style="text-align:center;padding:30px 0">
+                <div style="font-size:32px;margin-bottom:10px">🎉</div>
+                <div style="font-size:14px;font-weight:600;color:var(--accent)">文案已保存到档案</div>
+                <div style="font-size:12px;color:var(--ink3);margin-top:6px">
+                  关键词「{{ currentSession.keyword }}」的挖掘文案已关联到对应经历。<br>
+                  你可以在「填写信息」页面查看和修改。
+                </div>
+                <div style="margin-top:14px">
+                  <button class="btn btn-primary" @click="continueMining(item)">继续挖掘其他关键词</button>
+                  <button class="btn" @click="cancelMining" style="margin-left:8px">关闭面板</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" :class="{ show: toast.show }">{{ toast.message }}</div>
+</div>
+
+<script type="module">
+import { ExperienceMiner } from './src/experience-miner.js';
+import { matchAll, applyDealBreakers } from './src/match-engine.js';
+import { analyzePortrait } from './src/portrait-engine.js';
+
+const { createApp } = Vue;
+const LS_KEY = 'qiuzhao_profile_v4';
+
+createApp({
+  data() {
+    return {
+      loaded: false,
+      loading: false,
+      error: '',
+      profileData: {},
+      portrait: null,
+      allJobs: [],
+      intentions: [],
+      expandedJobId: null,
+      toast: { show: false, message: '' },
+
+      // 挖掘会话状态
+      currentSession: null,
+      chatHistory: [],
+      currentQuestion: null,
+      currentAnswerInput: '',
+      miningState: 'idle', // idle | chat | result | saved
+      generatedBullet: '',
+      evaluation: null,
+      isEditingBullet: false,
+      editedBulletText: '',
+    };
+  },
+
+  async mounted() {
+    await this.init();
+  },
+
+  methods: {
+    async init() {
+      this.error = '';
+      this.loading = true;
+
+      try {
+        // 1. 加载 profile
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) {
+          this.error = '暂无档案数据。请先回到「信息填写」页面完成基础信息录入。';
+          this.loading = false;
+          this.loaded = true;
+          return;
+        }
+        this.profileData = JSON.parse(raw);
+
+        // 2. 生成画像
+        this.portrait = analyzePortrait(this.profileData);
+
+        // 3. 加载 JD 库
+        const res = await fetch('./jobs/jd-library.json');
+        if (!res.ok) throw new Error(`JD 库加载失败: ${res.status}`);
+        const lib = await res.json();
+        this.allJobs = lib.jobs || [];
+
+        // 4. 加载意向岗位
+        this.loadIntentions();
+
+        this.loaded = true;
+      } catch (e) {
+        console.error('intention init error:', e);
+        let msg = e.message || '未知错误';
+        if (window.location.protocol === 'file:' && msg.includes('fetch')) {
+          msg = '无法从本地文件协议加载岗位数据。请使用本地 HTTP 服务器打开本页面，例如运行：python -m http.server 8765';
+        }
+        this.error = msg;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    loadIntentions() {
+      const intentionList = ExperienceMiner.getIntentions();
+      this.intentions = intentionList.map(intention => {
+        const job = this.allJobs.find(j => j.id === intention.jobId);
+        if (!job) return null;
+
+        // 计算匹配分数（复用 match-engine）
+        const results = matchAll([job], this.profileData, this.portrait);
+        const matchResult = results[0];
+
+        // 分析三档
+        const analysis = ExperienceMiner.analyze(job, this.profileData, matchResult);
+        const covered = analysis.filter(a => a.tier === 'covered').length;
+        const mineable = analysis.filter(a => a.tier === 'mineable').length;
+        const missing = analysis.filter(a => a.tier === 'missing').length;
+
+        return {
+          jobId: intention.jobId,
+          title: intention.title || job.title,
+          company: intention.company || job.company,
+          track: intention.track || job.track,
+          program: intention.program || job.program,
+          locations: intention.locations || job.locations,
+          employmentType: job.employmentType,
+          url: job.url,
+          score: matchResult ? Math.round(matchResult.score) : 0,
+          level: matchResult ? matchResult.level : 'medium',
+          addedAt: intention.addedAt,
+          job: job,
+          analysis: {
+            total: analysis.length,
+            covered,
+            mineable,
+            missing,
+            details: analysis
+          }
+        };
+      }).filter(Boolean).sort((a, b) => b.score - a.score);
+    },
+
+    openMiningPanel(item) {
+      this.expandedJobId = this.expandedJobId === item.jobId ? null : item.jobId;
+    },
+
+    removeIntention(jobId) {
+      ExperienceMiner.removeIntention(jobId);
+      this.intentions = this.intentions.filter(i => i.jobId !== jobId);
+      if (this.currentSession && this.currentSession.jobId === jobId) {
+        this.cancelMining();
+      }
+      this.showToast('已移除意向岗位');
+    },
+
+    // ── 挖掘流程 ──
+
+    startMining(item, detail) {
+      // 展开当前卡片
+      this.expandedJobId = item.jobId;
+
+      // 选择关联的经历（默认第一个）
+      const expId = detail.matchedExperiences?.[0]?.id || 'general';
+      const expType = detail.matchedExperiences?.[0]?.type || 'general';
+
+      // 创建会话
+      const session = ExperienceMiner.createSession(
+        item.jobId,
+        item.title,
+        detail.keyword,
+        expId,
+        expType
+      );
+
+      this.currentSession = session;
+      this.chatHistory = [];
+      this.miningState = 'chat';
+      this.generatedBullet = '';
+      this.evaluation = null;
+      this.isEditingBullet = false;
+      this.editedBulletText = '';
+
+      // 加载第一个问题
+      this.loadNextQuestion();
+    },
+
+    loadNextQuestion() {
+      const question = ExperienceMiner.getNextQuestion(
+        this.currentSession,
+        this.currentSession.keyword,
+        this.profileData
+      );
+
+      if (!question) {
+        // 所有问题已回答，进入生成阶段
+        this.finishSessionAndGenerate();
+        return;
+      }
+
+      this.currentQuestion = question;
+      this.currentAnswerInput = '';
+
+      // 添加系统消息
+      this.chatHistory.push({
+        id: `sys_${Date.now()}`,
+        role: 'system',
+        text: question.question,
+        stepId: question.id
+      });
+    },
+
+    submitAnswer() {
+      if (!this.currentAnswerInput.trim() && this.currentQuestion.type !== 'choice') return;
+
+      const answer = this.currentAnswerInput.trim();
+
+      // 记录用户回答
+      this.currentSession.qaLog.push({
+        stepId: this.currentQuestion.id,
+        question: this.currentQuestion.question,
+        answer: answer,
+        at: new Date().toISOString()
+      });
+
+      // 添加用户消息到聊天历史
+      this.chatHistory.push({
+        id: `user_${Date.now()}`,
+        role: 'user',
+        text: answer
+      });
+
+      // 保存会话
+      ExperienceMiner.saveSession(this.currentSession);
+
+      // 加载下一个问题
+      this.currentQuestion = null;
+      this.$nextTick(() => {
+        this.loadNextQuestion();
+      });
+    },
+
+    skipQuestion() {
+      this.currentAnswerInput = '跳过';
+      this.submitAnswer();
+    },
+
+    finishSessionAndGenerate() {
+      // 查找经历
+      const experience = this.findExperience(this.currentSession.experienceId);
+
+      // 生成文案
+      const bullet = ExperienceMiner.generateBullet(
+        this.currentSession,
+        this.currentSession.keyword,
+        experience
+      );
+
+      this.generatedBullet = bullet;
+      this.currentSession.generatedBullets = [bullet];
+
+      // 五维评估
+      const evalResult = ExperienceMiner.evaluateFiveDimensions(
+        bullet,
+        this.currentSession.keyword,
+        this.findJob(this.currentSession.jobId)
+      );
+      this.evaluation = evalResult;
+      this.currentSession.fiveDimEval = evalResult;
+
+      // 保存会话
+      ExperienceMiner.saveSession(this.currentSession);
+
+      this.miningState = 'result';
+    },
+
+    adoptBullet() {
+      this.currentSession.isAdopted = true;
+      this.currentSession.userEditedBullet = this.isEditingBullet ? this.editedBulletText : this.generatedBullet;
+      this.currentSession.status = 'completed';
+      this.currentSession.completedAt = new Date().toISOString();
+
+      // 保存到 profile
+      ExperienceMiner.saveSession(this.currentSession);
+      const updatedProfile = ExperienceMiner.saveToProfile(this.currentSession, this.profileData);
+
+      if (updatedProfile) {
+        this.profileData = updatedProfile;
+        localStorage.setItem(LS_KEY, JSON.stringify(this.profileData));
+      }
+
+      // 刷新意向列表（更新覆盖状态）
+      this.loadIntentions();
+
+      this.miningState = 'saved';
+      this.showToast('文案已保存到档案');
+    },
+
+    regenerateBullet() {
+      // 重新生成：可以基于同样的qaLog，但这里简单重调用
+      this.finishSessionAndGenerate();
+      this.showToast('已重新生成');
+    },
+
+    saveEditedBullet() {
+      this.generatedBullet = this.editedBulletText;
+      this.isEditingBullet = false;
+      // 重新评估
+      const evalResult = ExperienceMiner.evaluateFiveDimensions(
+        this.generatedBullet,
+        this.currentSession.keyword,
+        this.findJob(this.currentSession.jobId)
+      );
+      this.evaluation = evalResult;
+      this.currentSession.fiveDimEval = evalResult;
+      ExperienceMiner.saveSession(this.currentSession);
+    },
+
+    cancelMining() {
+      this.currentSession = null;
+      this.chatHistory = [];
+      this.currentQuestion = null;
+      this.currentAnswerInput = '';
+      this.miningState = 'idle';
+      this.generatedBullet = '';
+      this.evaluation = null;
+      this.isEditingBullet = false;
+      this.editedBulletText = '';
+    },
+
+    continueMining(item) {
+      this.cancelMining();
+      // 保持面板展开
+      this.expandedJobId = item.jobId;
+    },
+
+    // ── 辅助 ──
+
+    findExperience(id) {
+      if (!id || id === 'general') return null;
+      const [type, idx] = id.split('_');
+      const arr = type === 'intern' ? this.profileData.internships : this.profileData.projects;
+      return arr?.[parseInt(idx)] || null;
+    },
+
+    findJob(jobId) {
+      return this.allJobs.find(j => j.id === jobId) || null;
+    },
+
+    showToast(msg) {
+      this.toast.message = msg;
+      this.toast.show = true;
+      setTimeout(() => { this.toast.show = false; }, 2500);
+    },
+  },
+}).mount('#app');
+</script>
+</body>
+</html>

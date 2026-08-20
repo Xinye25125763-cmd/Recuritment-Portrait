@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>秋招画像系统 · 简历生成</title>
+<link rel="stylesheet" href="./src/design-system.css">
+<script src="./vendor/vue.global.prod.js"></script>
+<style>
+  #app{max-width:900px;margin:0 auto;padding:0 var(--space-6) var(--space-16)}
+  header{margin:0 calc(var(--space-6) * -1) var(--space-6);padding:var(--space-3) var(--space-6)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  .page-title{font-size:var(--text-lg);font-weight:600;margin-bottom:var(--space-5)}
+
+  .config-card{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);
+    padding:var(--space-5) var(--space-6);margin-bottom:var(--space-5);
+    box-shadow:var(--card-shadow);
+  }
+  .config-title{font-size:var(--text-sm);font-weight:600;margin-bottom:var(--space-3)}
+  .config-row{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap;margin-bottom:var(--space-2)}
+  .config-label{font-size:var(--text-sm);color:var(--ink-2);min-width:80px}
+  select, input[type="text"]{
+    font:inherit;font-size:var(--text-sm);padding:6px 10px;border:1px solid var(--border);
+    border-radius:var(--radius-md);background:var(--card);min-width:180px;
+  }
+
+  .resume-card{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);
+    padding:var(--space-8) var(--space-9);margin-bottom:var(--space-5);
+    box-shadow:var(--card-shadow);
+  }
+  .resume-title{
+    text-align:center;font-size:var(--text-lg);font-weight:600;margin-bottom:var(--space-6);
+    padding-bottom:var(--space-3);border-bottom:2px solid var(--brand-600);
+  }
+
+  .resume-section{margin-bottom:var(--space-5)}
+  .resume-sec-title{
+    font-size:var(--text-sm);font-weight:600;color:var(--brand-600);
+    margin-bottom:var(--space-2);padding-bottom:var(--space-1);border-bottom:1px solid var(--border);
+    letter-spacing:1px;
+  }
+
+  .resume-line{font-size:var(--text-sm);color:var(--ink-2);margin-bottom:3px;line-height:1.6}
+  .resume-line strong{color:var(--ink);font-weight:500}
+
+  .resume-item{margin-bottom:var(--space-3)}
+  .resume-item-header{
+    display:flex;justify-content:space-between;align-items:baseline;
+    flex-wrap:wrap;gap:var(--space-1);margin-bottom:var(--space-1);
+  }
+  .resume-item-title{font-size:var(--text-sm);font-weight:600;color:var(--ink)}
+  .resume-item-meta{font-size:var(--text-xs);color:var(--ink-3)}
+  .resume-bullet{
+    font-size:var(--text-xs);color:var(--ink-2);line-height:1.8;
+    padding-left:14px;position:relative;margin-bottom:2px;
+  }
+  .resume-bullet::before{
+    content:'·';position:absolute;left:2px;color:var(--brand-600);font-weight:700;
+  }
+  .resume-bullet.mined{
+    color:var(--brand-600);background:var(--brand-50);border-radius:var(--radius-sm);padding:3px 8px 3px 18px;
+  }
+  .resume-bullet.mined::before{left:6px}
+
+  .resume-skill-group{margin-bottom:var(--space-1)}
+  .resume-skill-label{font-size:var(--text-xs);font-weight:600;color:var(--ink-3);display:inline-block;margin-right:var(--space-1)}
+  .resume-skill-list{font-size:var(--text-xs);color:var(--ink-2)}
+
+  .resume-target{
+    background:var(--brand-50);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3);
+    font-size:var(--text-xs);color:var(--brand-600);margin-bottom:var(--space-4);
+  }
+
+  .action-bar{
+    display:flex;gap:var(--space-2);justify-content:center;margin:var(--space-5) 0;flex-wrap:wrap;
+  }
+
+  .text-mode{
+    background:var(--gray-50);border:1px solid var(--border);border-radius:var(--radius-md);
+    padding:var(--space-5);font-size:var(--text-sm);line-height:1.8;color:var(--ink);
+    white-space:pre-wrap;font-family:"SF Mono","Cascadia Code","PingFang SC",monospace;
+    max-height:500px;overflow-y:auto;
+  }
+
+  .toast{
+    position:fixed;bottom:var(--space-6);left:50%;transform:translateX(-50%) translateY(100px);
+    background:var(--ink);color:#fff;padding:var(--space-2) var(--space-5);border-radius:var(--radius-md);font-size:var(--text-sm);
+    opacity:0;transition:all .3s ease;z-index:100;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .ats-card{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);
+    padding:var(--space-5) var(--space-6);margin-bottom:var(--space-5);
+    box-shadow:var(--card-shadow);
+  }
+  .ats-title{font-size:var(--text-sm);font-weight:600;margin-bottom:var(--space-3);display:flex;align-items:center;gap:var(--space-2)}
+  .ats-score{font-size:var(--text-xl);font-weight:700;color:var(--brand-600)}
+  .ats-score.warn{color:var(--warn)}
+  .ats-score.danger{color:var(--danger)}
+  .ats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3);margin-bottom:var(--space-3)}
+  .ats-item{background:var(--gray-50);border-radius:var(--radius-md);padding:var(--space-3)}
+  .ats-item-title{font-size:var(--text-xs);font-weight:600;color:var(--ink-3);margin-bottom:var(--space-2)}
+  .ats-item-value{font-size:var(--text-lg);font-weight:700;color:var(--brand-600);margin-bottom:var(--space-1)}
+  .ats-item-value.warn{color:var(--warn)}
+  .ats-item-value.danger{color:var(--danger)}
+  .ats-item-desc{font-size:11px;color:var(--ink-3);line-height:1.5}
+  .ats-keywords{display:flex;gap:var(--space-1);flex-wrap:wrap;margin-top:var(--space-2)}
+  .ats-kw{font-size:11px;padding:3px 8px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border)}
+  .ats-kw.hit{background:#e8f5e9;border-color:#81c784;color:#2e7d32}
+  .ats-kw.miss{background:#ffebee;border-color:#e57373;color:#c62828}
+  .ats-suggestions{font-size:var(--text-xs);color:var(--ink-2);line-height:1.7;margin-top:var(--space-2)}
+  .ats-suggestions li{margin-bottom:4px}
+
+  @media print{
+    .site-header,.btn,.action-bar,.config-card{display:none}
+    body{background:#fff}
+    .resume-card{border:none;padding:var(--space-5)}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="hrow">
+      <div class="logo">秋招画像系统 <span>· 简历生成</span></div>
+      <div class="spacer"></div>
+      <a href="index.html" class="btn">填写信息</a>
+      <a href="match.html" class="btn">岗位匹配</a>
+      <a href="intention.html" class="btn">意向岗位</a>
+      <a href="portrait.html" class="btn">查看画像</a>
+    </div>
+  </header>
+
+  <div class="page-title">📄 简历生成</div>
+
+  <!-- 配置区 -->
+  <div class="config-card">
+    <div class="config-title">选择目标岗位</div>
+    <div v-if="intentions.length === 0" style="font-size:13px;color:var(--ink3)">
+      暂无意向岗位。请先前往「岗位匹配」或「意向岗位」页面添加意向。
+      <a href="intention.html" class="btn btn-primary" style="margin-left:10px">去添加意向 →</a>
+    </div>
+    <div v-else>
+      <div class="config-row">
+        <span class="config-label">目标岗位</span>
+        <select v-model="selectedJobId" @change="generateResume">
+          <option value="">请选择意向岗位</option>
+          <option v-for="item in intentions" :key="item.jobId" :value="item.jobId">
+            {{ item.company }} · {{ item.title }}（匹配分 {{ item.score }}）
+          </option>
+        </select>
+      </div>
+      <div class="config-row">
+        <span class="config-label">简历格式</span>
+        <label style="font-size:13px;margin-right:16px">
+          <input type="radio" v-model="format" value="preview" @change="generateResume"> 预览模式
+        </label>
+        <label style="font-size:13px">
+          <input type="radio" v-model="format" value="text" @change="generateResume"> 纯文本模式（ATS友好）
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 空状态 -->
+  <div v-if="!selectedJobId && intentions.length > 0" class="config-card" style="text-align:center;padding:60px 20px;color:var(--ink3)">
+    <div style="font-size:48px;margin-bottom:16px">📄</div>
+    <div style="font-size:16px;font-weight:600;color:var(--ink);margin-bottom:8px">选择目标岗位以生成简历</div>
+    <div style="font-size:13px">简历会根据目标岗位自动筛选和排序相关经历</div>
+  </div>
+
+  <!-- 简历内容 -->
+  <div v-if="selectedJobId && resumeData">
+    <!-- 预览模式 -->
+    <div v-if="format === 'preview'" class="resume-card">
+      <div class="resume-title">{{ resumeData.name || '简历' }}</div>
+
+      <!-- 目标岗位提示 -->
+      <div class="resume-target">
+        🎯 目标岗位：{{ resumeData.targetJob.title }} @ {{ resumeData.targetJob.company }} · 匹配分 {{ resumeData.targetJob.score }}
+      </div>
+
+      <!-- 个人信息 -->
+      <div class="resume-section" v-if="resumeData.basic">
+        <div class="resume-sec-title">个人信息</div>
+        <div class="resume-line"><strong>姓名：</strong>{{ resumeData.basic.name }}</div>
+        <div class="resume-line" v-if="resumeData.basic.phone"><strong>电话：</strong>{{ resumeData.basic.phone }}</div>
+        <div class="resume-line" v-if="resumeData.basic.email"><strong>邮箱：</strong>{{ resumeData.basic.email }}</div>
+        <div class="resume-line" v-if="resumeData.basic.github"><strong>GitHub：</strong>{{ resumeData.basic.github }}</div>
+        <div class="resume-line" v-if="resumeData.basic.blog"><strong>博客：</strong>{{ resumeData.basic.blog }}</div>
+      </div>
+
+      <!-- 教育背景 -->
+      <div class="resume-section" v-if="resumeData.education?.length">
+        <div class="resume-sec-title">教育背景</div>
+        <div class="resume-item" v-for="edu in resumeData.education" :key="edu._id">
+          <div class="resume-item-header">
+            <span class="resume-item-title">{{ edu.school }} · {{ edu.major }}（{{ edu.degree }}）</span>
+            <span class="resume-item-meta">{{ formatDate(edu.start) }} – {{ formatDate(edu.end) }}</span>
+          </div>
+          <div class="resume-line" v-if="edu.gpa">GPA：{{ edu.gpa }}</div>
+          <div class="resume-line" v-if="edu.courses">主修课程：{{ edu.courses }}</div>
+        </div>
+      </div>
+
+      <!-- 专业技能 -->
+      <div class="resume-section" v-if="resumeData.skills?.length">
+        <div class="resume-sec-title">专业技能</div>
+        <div class="resume-skill-group" v-for="group in resumeData.skills" :key="group.level">
+          <span class="resume-skill-label">{{ group.level }}：</span>
+          <span class="resume-skill-list">{{ group.items.join('、') }}</span>
+        </div>
+      </div>
+
+      <!-- 实习经历 -->
+      <div class="resume-section" v-if="resumeData.internships?.length">
+        <div class="resume-sec-title">实习经历</div>
+        <div class="resume-item" v-for="item in resumeData.internships" :key="item._id">
+          <div class="resume-item-header">
+            <span class="resume-item-title">{{ item.company }} · {{ item.role }}</span>
+            <span class="resume-item-meta">{{ formatDate(item.start) }} – {{ item.isOngoing ? '至今' : formatDate(item.end) }}</span>
+          </div>
+          <div class="resume-bullet" v-for="(h, i) in item.highlights" :key="i">{{ h }}</div>
+          <div class="resume-bullet mined" v-for="(m, i) in item.mined" :key="'m'+i" :title="'挖掘来源：' + m.keyword">{{ m.bullet }}</div>
+        </div>
+      </div>
+
+      <!-- 项目经历 -->
+      <div class="resume-section" v-if="resumeData.projects?.length">
+        <div class="resume-sec-title">项目经历</div>
+        <div class="resume-item" v-for="item in resumeData.projects" :key="item._id">
+          <div class="resume-item-header">
+            <span class="resume-item-title">{{ item.name }}</span>
+            <span class="resume-item-meta">{{ formatDate(item.start) }} – {{ item.isOngoing ? '至今' : formatDate(item.end) }}</span>
+          </div>
+          <div class="resume-bullet" v-for="(h, i) in item.highlights" :key="i">{{ h }}</div>
+          <div class="resume-bullet mined" v-for="(m, i) in item.mined" :key="'m'+i" :title="'挖掘来源：' + m.keyword">{{ m.bullet }}</div>
+        </div>
+      </div>
+
+      <!-- 荣誉奖项 -->
+      <div class="resume-section" v-if="resumeData.awards?.length">
+        <div class="resume-sec-title">荣誉奖项</div>
+        <div class="resume-bullet" v-for="(a, i) in resumeData.awards" :key="i">{{ a }}</div>
+      </div>
+    </div>
+
+    <!-- 纯文本模式 -->
+    <div v-else class="text-mode">{{ resumeText }}</div>
+
+    <!-- 操作按钮 -->
+    <div class="action-bar">
+      <button class="btn btn-primary" @click="copyResume">📋 复制简历文本</button>
+      <button class="btn" @click="printResume">🖨️ 打印 / 另存为 PDF</button>
+    </div>
+
+    <!-- ATS 校验 -->
+    <div class="ats-card" v-if="atsResult">
+      <div class="ats-title">
+        🤖 ATS 系统兼容性检测
+        <span class="ats-score" :class="atsResult.level">{{ atsResult.totalScore }} 分</span>
+        <span style="font-size:12px;color:var(--ink3)">满分 100</span>
+      </div>
+      <div class="ats-grid">
+        <div class="ats-item">
+          <div class="ats-item-title">关键词覆盖</div>
+          <div class="ats-item-value" :class="atsResult.keyword.level">{{ atsResult.keyword.score }}</div>
+          <div class="ats-item-desc">{{ atsResult.keyword.matched }}/{{ atsResult.keyword.total }} 个 JD 关键词已出现</div>
+        </div>
+        <div class="ats-item">
+          <div class="ats-item-title">格式可读性</div>
+          <div class="ats-item-value" :class="atsResult.format.level">{{ atsResult.format.score }}</div>
+          <div class="ats-item-desc">{{ atsResult.format.issues.length > 0 ? '存在 ' + atsResult.format.issues.length + ' 个格式问题' : '格式完全兼容' }}</div>
+        </div>
+        <div class="ats-item">
+          <div class="ats-item-title">硬性条件</div>
+          <div class="ats-item-value" :class="atsResult.hard.level">{{ atsResult.hard.score }}</div>
+          <div class="ats-item-desc">{{ atsResult.hard.passed ? '硬性条件满足' : '存在硬性条件缺口' }}</div>
+        </div>
+      </div>
+      <div v-if="atsResult.keyword.missing.length">
+        <div class="ats-item-title">缺失关键词（建议补充）</div>
+        <div class="ats-keywords">
+          <span class="ats-kw miss" v-for="kw in atsResult.keyword.missing" :key="kw">{{ kw }}</span>
+        </div>
+      </div>
+      <div v-if="atsResult.keyword.hit.length">
+        <div class="ats-item-title" style="margin-top:10px">已覆盖关键词</div>
+        <div class="ats-keywords">
+          <span class="ats-kw hit" v-for="kw in atsResult.keyword.hit" :key="kw">{{ kw }}</span>
+        </div>
+      </div>
+      <div v-if="atsResult.suggestions.length" style="margin-top:14px">
+        <div class="ats-item-title">优化建议</div>
+        <ul class="ats-suggestions">
+          <li v-for="(s, i) in atsResult.suggestions" :key="i">{{ s }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" :class="{ show: toast.show }">{{ toast.message }}</div>
+</div>
+
+<script type="module">
+import { ExperienceMiner } from './src/experience-miner.js';
+import { matchAll, applyDealBreakers } from './src/match-engine.js';
+import { analyzePortrait } from './src/portrait-engine.js';
+
+const { createApp } = Vue;
+const LS_KEY = 'qiuzhao_profile_v4';
+
+createApp({
+  data() {
+    return {
+      profileData: {},
+      portrait: null,
+      allJobs: [],
+      intentions: [],
+      selectedJobId: '',
+      format: 'preview',
+      resumeData: null,
+      resumeText: '',
+      atsResult: null,
+      toast: { show: false, message: '' },
+    };
+  },
+
+  async mounted() {
+    await this.init();
+  },
+
+  methods: {
+    async init() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) return;
+        this.profileData = JSON.parse(raw);
+        this.portrait = analyzePortrait(this.profileData);
+
+        const res = await fetch('./jobs/jd-library.json');
+        const lib = await res.json();
+        this.allJobs = lib.jobs || [];
+
+        this.loadIntentions();
+      } catch (e) {
+        console.error('resume init error:', e);
+      }
+    },
+
+    loadIntentions() {
+      const intentionList = ExperienceMiner.getIntentions();
+      this.intentions = intentionList.map(intention => {
+        const job = this.allJobs.find(j => j.id === intention.jobId);
+        if (!job) return null;
+        const results = matchAll([job], this.profileData, this.portrait);
+        const matchResult = results[0];
+        return {
+          jobId: intention.jobId,
+          title: intention.title || job.title,
+          company: intention.company || job.company,
+          score: matchResult ? Math.round(matchResult.score) : 0,
+        };
+      }).filter(Boolean).sort((a, b) => b.score - a.score);
+    },
+
+    generateResume() {
+      if (!this.selectedJobId) {
+        this.resumeData = null;
+        this.resumeText = '';
+        return;
+      }
+
+      const job = this.allJobs.find(j => j.id === this.selectedJobId);
+      const intention = this.intentions.find(i => i.jobId === this.selectedJobId);
+      const profile = this.profileData;
+
+      // 收集简历数据
+      const data = {
+        name: profile.name,
+        targetJob: {
+          title: intention?.title || job?.title || '',
+          company: intention?.company || job?.company || '',
+          score: intention?.score || 0,
+        },
+        basic: {
+          name: profile.name,
+          phone: profile.phone,
+          email: profile.email,
+          github: profile.github,
+          blog: profile.blog,
+        },
+        education: profile.education || [],
+        skills: this.buildSkillGroups(profile),
+        internships: this.buildExperienceList(profile.internships || [], 'internship', job),
+        projects: this.buildExperienceList(profile.projects || [], 'project', job),
+        awards: this.extractAwards(profile),
+      };
+
+      this.resumeData = data;
+      this.resumeText = this.toPlainText(data);
+      this.atsResult = this.runATSCheck(data, job);
+    },
+
+    buildSkillGroups(profile) {
+      const skillList = profile.skillList || [];
+      const groups = {};
+      skillList.forEach(s => {
+        if (!groups[s.level]) groups[s.level] = [];
+        groups[s.level].push(s.name);
+      });
+      const levelOrder = ['熟练', '熟悉', '了解', '缺口'];
+      return levelOrder
+        .filter(level => groups[level]?.length > 0)
+        .map(level => ({ level, items: groups[level] }));
+    },
+
+    buildExperienceList(list, type, targetJob) {
+      // 按与目标岗位的相关性排序
+      const withScore = list.map((item, idx) => {
+        const expId = `${type === 'internship' ? 'intern' : 'project'}_${idx}`;
+        const mined = item._mined || [];
+
+        // 计算相关性：已挖掘 bullets 中是否包含目标岗位关键词
+        let relevance = 0;
+        if (targetJob?.keywords?.length) {
+          const minedText = mined.map(m => m.bullet + m.keyword).join(' ');
+          const highlightText = (item.highlights || []).join(' ');
+          const expText = minedText + ' ' + highlightText;
+          targetJob.keywords.forEach(kw => {
+            if (expText.includes(kw)) relevance += 2;
+          });
+        }
+        // 有挖掘的优先
+        relevance += mined.length * 3;
+
+        return {
+          ...item,
+          _id: expId,
+          mined,
+          relevance,
+        };
+      });
+
+      return withScore.sort((a, b) => b.relevance - a.relevance);
+    },
+
+    extractAwards(profile) {
+      const awards = [];
+      if (profile.awards) {
+        if (typeof profile.awards === 'string' && profile.awards.trim()) {
+          awards.push(profile.awards);
+        }
+      }
+      // 从荣誉字段收集
+      const sections = profile.sections || [];
+      sections.forEach(sec => {
+        if (sec.listKey === 'awards' && sec.items) {
+          sec.items.forEach(item => {
+            if (item.name) awards.push(item.name);
+          });
+        }
+      });
+      return awards;
+    },
+
+    toPlainText(data) {
+      const lines = [];
+      lines.push(data.name || '简历');
+      lines.push('');
+
+      // 联系方式
+      const contacts = [];
+      if (data.basic.phone) contacts.push('电话：' + data.basic.phone);
+      if (data.basic.email) contacts.push('邮箱：' + data.basic.email);
+      if (data.basic.github) contacts.push('GitHub：' + data.basic.github);
+      if (contacts.length) {
+        lines.push(contacts.join(' | '));
+        lines.push('');
+      }
+
+      // 目标岗位
+      lines.push('【求职意向】');
+      lines.push(`目标岗位：${data.targetJob.title} @ ${data.targetJob.company}`);
+      lines.push('');
+
+      // 教育
+      if (data.education.length) {
+        lines.push('【教育背景】');
+        data.education.forEach(edu => {
+          lines.push(`${edu.school} · ${edu.major}（${edu.degree}） ${this.formatDate(edu.start)} – ${this.formatDate(edu.end)}`);
+          if (edu.gpa) lines.push(`GPA：${edu.gpa}`);
+        });
+        lines.push('');
+      }
+
+      // 技能
+      if (data.skills.length) {
+        lines.push('【专业技能】');
+        data.skills.forEach(g => {
+          lines.push(`${g.level}：${g.items.join('、')}`);
+        });
+        lines.push('');
+      }
+
+      // 实习
+      if (data.internships.length) {
+        lines.push('【实习经历】');
+        data.internships.forEach(item => {
+          lines.push(`${item.company} · ${item.role}  ${this.formatDate(item.start)} – ${item.isOngoing ? '至今' : this.formatDate(item.end)}`);
+          (item.highlights || []).forEach(h => lines.push('· ' + h));
+          item.mined.forEach(m => lines.push('· ' + m.bullet + ` [${m.keyword}]`));
+          lines.push('');
+        });
+      }
+
+      // 项目
+      if (data.projects.length) {
+        lines.push('【项目经历】');
+        data.projects.forEach(item => {
+          lines.push(`${item.name}  ${this.formatDate(item.start)} – ${item.isOngoing ? '至今' : this.formatDate(item.end)}`);
+          (item.highlights || []).forEach(h => lines.push('· ' + h));
+          item.mined.forEach(m => lines.push('· ' + m.bullet + ` [${m.keyword}]`));
+          lines.push('');
+        });
+      }
+
+      // 奖项
+      if (data.awards.length) {
+        lines.push('【荣誉奖项】');
+        data.awards.forEach(a => lines.push('· ' + a));
+      }
+
+      return lines.join('\n');
+    },
+
+    formatDate(val) {
+      if (!val) return '';
+      if (typeof val === 'string' && val.includes('-')) {
+        const [y, m] = val.split('-');
+        return `${y}.${m}`;
+      }
+      return val;
+    },
+
+    async copyResume() {
+      try {
+        await navigator.clipboard.writeText(this.resumeText);
+        this.showToast('简历文本已复制到剪贴板');
+      } catch {
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = this.resumeText;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        this.showToast('简历文本已复制到剪贴板');
+      }
+    },
+
+    printResume() {
+      window.print();
+    },
+
+    runATSCheck(data, job) {
+      if (!job) return null;
+      const result = {
+        totalScore: 0,
+        level: 'good',
+        keyword: { score: 0, total: 0, matched: 0, hit: [], missing: [], level: 'good' },
+        format: { score: 0, issues: [], level: 'good' },
+        hard: { score: 0, passed: true, issues: [], level: 'good' },
+        suggestions: [],
+      };
+
+      const resumeText = this.resumeText.toLowerCase();
+      const jdKeywords = job.keywords || [];
+
+      // 1. 关键词覆盖
+      result.keyword.total = jdKeywords.length;
+      jdKeywords.forEach(kw => {
+        if (resumeText.includes(kw.toLowerCase())) {
+          result.keyword.matched++;
+          result.keyword.hit.push(kw);
+        } else {
+          result.keyword.missing.push(kw);
+        }
+      });
+      const kwRatio = result.keyword.total > 0 ? result.keyword.matched / result.keyword.total : 1;
+      result.keyword.score = Math.round(kwRatio * 40);
+      if (kwRatio < 0.5) {
+        result.keyword.level = 'danger';
+        result.suggestions.push(`JD 关键词覆盖率仅 ${Math.round(kwRatio*100)}%，建议补充：${result.keyword.missing.slice(0,3).join('、')}`);
+      } else if (kwRatio < 0.8) {
+        result.keyword.level = 'warn';
+        result.suggestions.push(`JD 关键词覆盖率 ${Math.round(kwRatio*100)}%，可再补充：${result.keyword.missing.slice(0,2).join('、')}`);
+      }
+
+      // 2. 格式可读性
+      const formatIssues = [];
+      // 检查是否有表格、图片、特殊字符
+      if (resumeText.includes('│') || resumeText.includes('├') || resumeText.includes('─')) {
+        formatIssues.push('检测到表格边框字符，ATS 可能无法正确解析');
+      }
+      if (/[^\u4e00-\u9fa5a-zA-Z0-9\s\n·,.，。、：:；;（）()【】\[\]\/\-_%@+]|\p{Emoji}/u.test(this.resumeText)) {
+        formatIssues.push('检测到特殊符号或表情，建议替换为纯文本');
+      }
+      // 检查分段是否清晰
+      const sections = resumeText.split('\n\n').length;
+      if (sections < 4) {
+        formatIssues.push('简历段落过少，建议增加结构化标题');
+      }
+      result.format.issues = formatIssues;
+      result.format.score = formatIssues.length === 0 ? 35 : formatIssues.length === 1 ? 28 : 20;
+      if (formatIssues.length > 1) result.format.level = 'warn';
+      if (formatIssues.length > 2) result.format.level = 'danger';
+      formatIssues.forEach(i => result.suggestions.push(i));
+
+      // 3. 硬性条件
+      const hardIssues = [];
+      const profile = this.profileData;
+      // 学历检查
+      const degree = profile.education?.[0]?.degree;
+      if (job.degree && degree) {
+        const degreeOrder = ['大专', '本科', '硕士', '博士'];
+        const requiredIdx = degreeOrder.indexOf(job.degree);
+        const actualIdx = degreeOrder.indexOf(degree);
+        if (actualIdx < requiredIdx) {
+          hardIssues.push(`学历要求：${job.degree}，当前：${degree}`);
+        }
+      }
+      // 工作年限（校招通常不要求）
+      if (job.experienceYears && job.experienceYears > 0) {
+        const totalMonths = this.calcTotalExperienceMonths(profile);
+        if (totalMonths < job.experienceYears * 12) {
+          hardIssues.push(`要求 ${job.experienceYears} 年经验，当前约 ${Math.floor(totalMonths/12)} 年`);
+        }
+      }
+      result.hard.issues = hardIssues;
+      result.hard.passed = hardIssues.length === 0;
+      result.hard.score = hardIssues.length === 0 ? 25 : 15;
+      if (hardIssues.length > 0) {
+        result.hard.level = 'warn';
+        result.suggestions.push('硬性条件存在缺口，投递前请确认是否满足');
+      }
+
+      // 总分
+      result.totalScore = result.keyword.score + result.format.score + result.hard.score;
+      if (result.totalScore >= 85) result.level = 'good';
+      else if (result.totalScore >= 60) result.level = 'warn';
+      else result.level = 'danger';
+
+      return result;
+    },
+
+    calcTotalExperienceMonths(profile) {
+      let months = 0;
+      (profile.internships || []).forEach(intern => {
+        if (intern.start && intern.end) {
+          const s = new Date(intern.start);
+          const e = intern.isOngoing ? new Date() : new Date(intern.end);
+          months += (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth());
+        }
+      });
+      return months;
+    },
+
+    showToast(msg) {
+      this.toast.message = msg;
+      this.toast.show = true;
+      setTimeout(() => { this.toast.show = false; }, 2500);
+    },
+  },
+}).mount('#app');
+</script>
+</body>
+</html>

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>秋招画像系统 · 信息填写</title>
+<link rel="stylesheet" href="./src/design-system.css">
+<script src="./vendor/vue.global.prod.js"></script>
+<style>
+  #app{max-width:1100px;margin:0 auto;padding:0 var(--space-6) var(--space-16)}
+
+  /* 顶栏覆盖 */
+  header{margin:0 calc(var(--space-6) * -1) var(--space-6);padding:var(--space-3) var(--space-6)}
+  .privacy{
+    font-size:var(--text-xs);color:var(--brand-600);background:var(--brand-50);
+    padding:var(--space-1) var(--space-3);border-radius:var(--radius-full);
+    border:1px solid var(--brand-200);
+  }
+  .savehint{font-size:var(--text-xs);color:var(--ink-3);min-width:96px}
+
+  /* 进度 */
+  .progress{display:flex;gap:var(--space-1);margin-top:var(--space-3);flex-wrap:wrap}
+  .pstep{
+    font-size:var(--text-xs);padding:var(--space-1) var(--space-3);border-radius:var(--radius-md);
+    border:1px solid var(--border);background:var(--card);color:var(--ink-2);
+    white-space:nowrap;transition:var(--transition-fast);user-select:none;cursor:pointer;
+  }
+  .pstep:hover{border-color:var(--brand-400);color:var(--brand-600)}
+  .pstep.active{background:var(--brand-600);color:#fff;border-color:var(--brand-600)}
+  .pstep.done{background:var(--brand-50);color:var(--brand-600);border-color:var(--brand-200)}
+  .pstep .dot{font-size:10px;margin-left:4px;opacity:.8}
+
+  /* 卡片覆盖 */
+  .card{padding:var(--space-6) var(--space-8);margin-bottom:var(--space-5)}
+  .sec-title{font-size:var(--text-lg);font-weight:600;letter-spacing:-0.02em;display:flex;align-items:center;gap:var(--space-2)}
+  .sec-icon{color:var(--brand-600);font-size:var(--text-md)}
+  .sec-desc{
+    color:var(--ink-2);font-size:var(--text-sm);margin:var(--space-2) 0 var(--space-6);
+    padding:var(--space-3) var(--space-4);background:var(--gray-100);
+    border-left:3px solid var(--brand-600);border-radius:0 var(--radius-md) var(--radius-md) 0;
+    white-space:pre-line;
+  }
+
+  /* 字段 */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-4) var(--space-5)}
+  .field.wide{grid-column:1/-1}
+  .flabel{display:block;font-size:var(--text-sm);font-weight:500;margin-bottom:var(--space-1)}
+  .req{color:var(--danger);margin-left:3px}
+  .badge-track{
+    font-size:10.5px;padding:1.5px 6px;border-radius:var(--radius-sm);margin-left:6px;
+    font-weight:400;vertical-align:1px;
+  }
+  .badge-soe{background:#fdf3e7;color:#9a6b2f;border:1px solid #f0dcc0}
+  .badge-net{background:#eaf0fa;color:#3d5a8a;border:1px solid #ccd9ee}
+  .badge-lock{background:var(--danger-soft);color:var(--danger);border:1px solid #f0d5d0}
+
+  input[type=text],input[type=number],input[type=month],select,textarea{
+    width:100%;font:inherit;font-size:var(--text-sm);padding:var(--space-3) var(--space-4);
+    border:1px solid var(--border);border-radius:var(--radius-md);background:var(--card);color:var(--ink);
+    transition:var(--transition-fast);font-family:inherit;
+  }
+  input:focus,select:focus,textarea:focus{
+    outline:none;border-color:var(--brand-400);box-shadow:0 0 0 3px var(--brand-100)
+  }
+  textarea{resize:vertical;line-height:1.65}
+  .hint{font-size:var(--text-xs);color:var(--ink-3);margin-top:var(--space-1);white-space:pre-line;line-height:1.55}
+  .err{font-size:var(--text-xs);color:var(--danger);margin-top:var(--space-1)}
+
+  .opts{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:2px}
+  .opt{
+    display:inline-flex;align-items:center;gap:6px;font-size:var(--text-sm);
+    padding:var(--space-2) var(--space-3);border:1px solid var(--border);border-radius:var(--radius-md);
+    background:var(--card);cursor:pointer;transition:var(--transition-fast);user-select:none;
+  }
+  .opt:hover{border-color:var(--brand-300)}
+  .opt.on{background:var(--brand-50);border-color:var(--brand-600);color:var(--brand-600);font-weight:500}
+  .opt input{display:none}
+
+  /* 列表项 */
+  .item{
+    border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-5) var(--space-6);
+    margin-bottom:var(--space-4);background:var(--card);position:relative;
+    box-shadow:var(--card-shadow);transition:var(--transition-normal);
+  }
+  .item:hover{box-shadow:var(--card-shadow-hover)}
+  .item-head{
+    display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-4);
+    padding-bottom:var(--space-3);border-bottom:1px dashed var(--border);
+  }
+  .item-no{
+    background:var(--brand-600);color:#fff;width:24px;height:24px;border-radius:50%;
+    display:grid;place-items:center;font-size:var(--text-xs);font-weight:600;flex-shrink:0;
+  }
+  .item-name{font-weight:500;font-size:var(--text-sm);color:var(--ink-2)}
+  .del{
+    margin-left:auto;font-size:var(--text-xs);color:var(--danger);background:none;
+    border:1px solid transparent;cursor:pointer;padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);
+  }
+  .del:hover{background:var(--danger-soft);border-color:#f0d5d0}
+  .add{
+    width:100%;padding:var(--space-3);border:1.5px dashed var(--border);border-radius:var(--radius-lg);
+    background:var(--card);color:var(--brand-600);font:inherit;font-size:var(--text-sm);
+    cursor:pointer;transition:var(--transition-fast);font-weight:500;
+  }
+  .add:hover{border-color:var(--brand-600);background:var(--brand-50)}
+
+  /* 已挖掘文案 */
+  .mined-panel{
+    margin-top:var(--space-4);padding:var(--space-4);background:var(--brand-50);
+    border-radius:var(--radius-md);border:1px solid var(--brand-200);
+  }
+  .mined-title{font-size:var(--text-xs);font-weight:600;color:var(--brand-600);margin-bottom:var(--space-2)}
+  .mined-list{display:flex;flex-direction:column;gap:var(--space-2)}
+  .mined-item{
+    display:flex;align-items:flex-start;gap:var(--space-2);font-size:var(--text-xs);
+    background:var(--card);padding:var(--space-2) var(--space-3);border-radius:var(--radius-sm);
+    border-left:3px solid var(--brand-600);
+  }
+  .mined-keyword{
+    flex-shrink:0;font-size:10px;padding:2px 8px;border-radius:var(--radius-sm);
+    background:var(--brand-50);color:var(--brand-600);font-weight:500;
+  }
+  .mined-bullet{color:var(--ink-2);line-height:1.6}
+
+  /* 底部导航 */
+  .nav{display:flex;gap:var(--space-3);align-items:center;margin-top:var(--space-6)}
+  .nav .spacer{flex:1}
+
+  /* 完成页 */
+  .done-box{text-align:center;padding:var(--space-4) 0}
+  .done-icon{font-size:44px;color:var(--brand-600);margin-bottom:var(--space-2)}
+  .stat-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:var(--space-3);margin:var(--space-6) 0;text-align:left;
+  }
+  .stat{background:var(--gray-100);border-radius:var(--radius-md);padding:var(--space-4);border:1px solid var(--border)}
+  .stat-n{font-size:24px;font-weight:600;color:var(--brand-600);line-height:1.2}
+  .stat-l{font-size:var(--text-xs);color:var(--ink-2);margin-top:var(--space-1)}
+  .checklist{text-align:left;margin:var(--space-5) 0}
+  .cl-item{
+    display:flex;gap:var(--space-2);align-items:flex-start;padding:var(--space-2) var(--space-3);
+    border-radius:var(--radius-md);margin-bottom:var(--space-1);font-size:var(--text-sm);
+  }
+  .cl-ok{background:var(--brand-50);color:var(--brand-700)}
+  .cl-warn{background:var(--warn-soft);color:#7a5c10}
+  .cl-mark{font-weight:600;flex-shrink:0}
+
+  .note{
+    background:var(--warn-soft);border:1px solid #f0e2c0;border-radius:var(--radius-md);
+    padding:var(--space-4);font-size:var(--text-sm);color:#6b5410;margin-top:var(--space-4);text-align:left;
+    line-height:1.65;
+  }
+  .note b{color:#5a460d}
+  input[type=file]{display:none}
+
+  @media(max-width:640px){
+    .grid{grid-template-columns:1fr}
+    .card{padding:var(--space-4)}
+    #app{padding:0 var(--space-4) var(--space-10)}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="hrow">
+      <div class="logo">秋招画像系统 <span>· 信息填写</span></div>
+      <div class="privacy">🔒 数据仅存本地浏览器，不上传任何服务器</div>
+      <div class="spacer"></div>
+      <a href="match.html" class="btn">岗位匹配</a>
+      <a href="intention.html" class="btn">意向岗位</a>
+      <a href="resume.html" class="btn">简历生成</a>
+      <a href="portrait.html" class="btn">查看画像</a>
+      <span class="savehint">{{ saveHint }}</span>
+      <button class="btn" @click="triggerImport">导入 JSON</button>
+      <input type="file" ref="fileInput" accept=".json" @change="handleImport">
+      <button class="btn btn-primary" @click="exportData">导出 JSON</button>
+    </div>
+    <div class="progress">
+      <div v-for="(s,i) in visibleSections" :key="s.id"
+           class="pstep" :class="{active:i===step, done:i<step}"
+           @click="step=i">
+        {{ s.icon }} {{ s.title }}
+        <span class="dot" v-if="sectionFilled(s)">●</span>
+      </div>
+      <div class="pstep" :class="{active:step===visibleSections.length}"
+           @click="step=visibleSections.length">✓ 完成</div>
+    </div>
+  </header>
+
+  <!-- ══ 填写区 ══ -->
+  <div v-if="step < visibleSections.length" class="card">
+    <div class="sec-title">
+      <span class="sec-icon">{{ cur.icon }}</span>{{ cur.title }}
+    </div>
+    <div class="sec-desc">{{ cur.desc }}</div>
+
+    <!-- 普通字段 -->
+    <div v-if="!cur.isList" class="grid">
+      <div v-for="f in visibleFields(cur)" :key="f.key"
+           class="field" :class="{wide: isWide(f)}">
+        <label class="flabel">
+          {{ f.label }}
+          <span v-if="f.required" class="req">*</span>
+          <span v-if="f.sensitive" class="badge badge-lock">🔒 仅本地</span>
+          <span v-else-if="f.track==='soe'" class="badge badge-soe">央国企</span>
+          <span v-else-if="f.track==='internet'" class="badge badge-net">互联网</span>
+        </label>
+
+        <template v-if="f.type==='textarea'">
+          <textarea v-model="data[f.key]" :rows="f.rows||3"></textarea>
+        </template>
+        <template v-else-if="f.type==='select'">
+          <select v-model="data[f.key]">
+            <option value="">请选择</option>
+            <option v-for="o in f.options" :key="o" :value="o">{{ o }}</option>
+          </select>
+        </template>
+        <template v-else-if="f.type==='radio'">
+          <div class="opts">
+            <label v-for="o in f.options" :key="o" class="opt" :class="{on:data[f.key]===o}">
+              <input type="radio" :value="o" v-model="data[f.key]">{{ o }}
+            </label>
+          </div>
+        </template>
+        <template v-else-if="f.type==='multiselect'">
+          <div class="opts">
+            <label v-for="o in f.options" :key="o" class="opt"
+                   :class="{on:(data[f.key]||[]).includes(o)}">
+              <input type="checkbox" :value="o" v-model="data[f.key]">{{ o }}
+            </label>
+          </div>
+        </template>
+        <template v-else-if="f.type==='checkbox'">
+          <label class="opt" :class="{on:data[f.key]}">
+            <input type="checkbox" v-model="data[f.key]">是
+          </label>
+        </template>
+        <template v-else-if="f.type==='number'">
+          <input type="number" v-model="data[f.key]">
+        </template>
+        <template v-else-if="f.type==='month'">
+          <input type="month" v-model="data[f.key]">
+        </template>
+        <template v-else>
+          <input type="text" v-model="data[f.key]">
+        </template>
+
+        <div v-if="f.hint" class="hint">{{ f.hint }}</div>
+        <div v-if="fieldError(f)" class="err">{{ fieldError(f) }}</div>
+      </div>
+    </div>
+
+    <!-- 列表型 -->
+    <div v-else>
+      <div v-if="!data[cur.listKey].length" class="empty">
+        还没有添加内容，点下方按钮开始
+      </div>
+      <div v-for="(item,idx) in data[cur.listKey]" :key="item._id" class="item">
+        <div class="item-head">
+          <div class="item-no">{{ idx+1 }}</div>
+          <div class="item-name">{{ itemTitle(cur,item) || '未命名' }}</div>
+          <button class="del" @click="removeItem(cur,idx)">删除</button>
+        </div>
+        <div class="grid">
+          <div v-for="f in visibleItemFields(cur, item)" :key="f.key"
+               class="field" :class="{wide: isWide(f)}">
+            <label class="flabel">
+              {{ f.label }}<span v-if="f.required" class="req">*</span>
+              <span v-if="f.sensitive" class="badge badge-lock">🔒 仅本地</span>
+            </label>
+            <template v-if="f.type==='textarea'">
+              <textarea v-model="item[f.key]" :rows="f.rows||3"></textarea>
+            </template>
+            <template v-else-if="f.type==='select'">
+              <select v-model="item[f.key]">
+                <option value="">请选择</option>
+                <option v-for="o in f.options" :key="o" :value="o">{{ o }}</option>
+              </select>
+            </template>
+            <template v-else-if="f.type==='radio'">
+              <div class="opts">
+                <label v-for="o in f.options" :key="o" class="opt" :class="{on:item[f.key]===o}">
+                  <input type="radio" :value="o" v-model="item[f.key]">{{ o }}
+                </label>
+              </div>
+            </template>
+            <template v-else-if="f.type==='checkbox'">
+              <label class="opt" :class="{on:item[f.key]}">
+                <input type="checkbox" v-model="item[f.key]">是
+              </label>
+            </template>
+            <template v-else-if="f.type==='number'">
+              <input type="number" v-model="item[f.key]">
+            </template>
+            <template v-else-if="f.type==='month'">
+              <input type="month" v-model="item[f.key]">
+            </template>
+            <template v-else>
+              <input type="text" v-model="item[f.key]">
+            </template>
+            <div v-if="f.hint" class="hint">{{ f.hint }}</div>
+          </div>
+        </div>
+
+        <!-- 已挖掘简历文案 -->
+        <div v-if="item._mined?.length" class="mined-panel">
+          <div class="mined-title">📝 已挖掘简历文案（来自「意向岗位」经历挖掘）</div>
+          <div class="mined-list">
+            <div class="mined-item" v-for="(m, mIdx) in item._mined" :key="mIdx">
+              <span class="mined-keyword">{{ m.keyword }}</span>
+              <span class="mined-bullet">{{ m.bullet }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="add" @click="addItem(cur)">{{ cur.addLabel }}</button>
+    </div>
+
+    <div class="nav">
+      <button class="btn" v-if="step>0" @click="prev">← 上一步</button>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" @click="next">跳过</button>
+      <button class="btn btn-primary" @click="next">下一步 →</button>
+    </div>
+  </div>
+
+  <!-- ══ 完成页 ══ -->
+  <div v-else class="card">
+    <div class="done-box">
+      <div class="done-icon">◈</div>
+      <div class="sec-title" style="justify-content:center">信息填写概览</div>
+
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-n">{{ completeness }}%</div>
+          <div class="stat-l">整体完成度</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">{{ data.internships.length }}</div>
+          <div class="stat-l">实习经历</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">{{ data.projects.length }}</div>
+          <div class="stat-l">项目经历</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">{{ (data.targetDirections||[]).length }}</div>
+          <div class="stat-l">意向方向</div>
+        </div>
+      </div>
+
+      <div class="checklist">
+        <div v-for="c in checks" :key="c.label"
+             class="cl-item" :class="c.ok?'cl-ok':'cl-warn'">
+          <span class="cl-mark">{{ c.ok?'✓':'!' }}</span>
+          <span>{{ c.label }}</span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:14px">
+        <a href="portrait.html" class="btn btn-primary" style="font-size:15px;padding:11px 30px">🎯 生成人才画像</a>
+        <button class="btn btn-primary" style="font-size:15px;padding:11px 30px"
+                @click="exportData">导出 JSON 档案</button>
+      </div>
+
+      <div class="note">
+        <b>下一步怎么用：</b><br>
+        1. 点击「生成人才画像」进入下一步，系统会自动读取你刚才填写的档案并生成能力画像。<br>
+        2. 也可以先导出 JSON 备份，<b>妥善保管这个文件</b> —— 换电脑/换浏览器时用"导入 JSON"恢复。<br>
+        3. 浏览器缓存会自动暂存，但<b>清缓存或换设备就会丢</b>，所以每次填完都建议导出一次。<br><br>
+        <b>关于隐私：</b>身份证号、家庭情况等标 🔒 的字段只存在你的浏览器里，导出时会单独放在
+        <code>_sensitive</code> 字段中。如果你要把 JSON 发给别人看，请先手动删掉这一段。
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="./src/schema.js"></script>
+<script>
+const { createApp } = Vue;
+const S = window.QZ_SCHEMA;
+const LS_KEY = 'qiuzhao_profile_v4';
+
+createApp({
+  data() {
+    return {
+      data: S.buildEmptyData(),
+      step: 0,
+      saveHint: '',
+      _timer: null
+    };
+  },
+  computed: {
+    visibleSections() {
+      return S.SECTIONS.filter(s => !s.showIf || s.showIf(this.data));
+    },
+    cur() {
+      return this.visibleSections[this.step] || this.visibleSections[0];
+    },
+    completeness() {
+      let total = 0, filled = 0;
+      this.visibleSections.forEach(sec => {
+        if (sec.isList) {
+          total += 1;
+          if ((this.data[sec.listKey] || []).length) filled += 1;
+        } else {
+          this.visibleFields(sec).forEach(f => {
+            total++;
+            if (this.hasValue(this.data[f.key])) filled++;
+          });
+        }
+      });
+      return total ? Math.round(filled / total * 100) : 0;
+    },
+    checks() {
+      const d = this.data;
+      const list = [];
+      list.push({ ok: !!d.name && !!d.phone && !!d.email, label: '基本联系方式（姓名/手机/邮箱）已填写' });
+      list.push({ ok: !!d.ugSchool && !!d.ugMajor, label: '教育背景已填写' });
+      list.push({
+        ok: (d.targetDirections || []).length > 0 && (d.targetCities || []).length > 0,
+        label: '求职意向已填写 —— 这是岗位推荐的必要输入'
+      });
+      list.push({
+        ok: d.internships.length > 0 || d.projects.length > 0,
+        label: '至少有一段实习或项目经历'
+      });
+      list.push({ ok: !!d.skillsProficient, label: '技能清单已分档填写' });
+      const noMetric = d.internships.filter(i => i.company && !i.metrics).length;
+      list.push({
+        ok: noMetric === 0,
+        label: noMetric === 0 ? '实习经历均已填写量化成果（或注明暂无）'
+                              : `有 ${noMetric} 段实习未填量化成果 —— 建议补上或明确写"暂无量化"`
+      });
+      const noWeak = d.internships.filter(i => i.company && !i.weakPoints).length
+                   + d.projects.filter(p => p.name && !p.weakPoints).length;
+      if (noWeak > 0) list.push({ ok: false, label: `有 ${noWeak} 段经历未填"讲不清楚的地方" —— 面试准备会用到` });
+      return list;
+    }
+  },
+  methods: {
+    hasValue(v) {
+      if (Array.isArray(v)) return v.length > 0;
+      if (typeof v === 'boolean') return v;
+      return v !== '' && v != null;
+    },
+    visibleFields(sec) {
+      return (sec.fields || []).filter(f => !f.showIf || f.showIf(this.data));
+    },
+    isWide(f) {
+      return f.type === 'textarea' || f.type === 'multiselect'
+          || (f.type === 'radio' && (f.options || []).length > 3);
+    },
+    sectionFilled(sec) {
+      if (sec.isList) return (this.data[sec.listKey] || []).length > 0;
+      return this.visibleFields(sec).some(f => this.hasValue(this.data[f.key]));
+    },
+    fieldError(f) {
+      const v = this.data[f.key];
+      if (!v || !f.validate) return '';
+      const r = f.validate(v);
+      return r === true ? '' : r;
+    },
+    visibleItemFields(sec, item) {
+      return sec.itemFields.filter(f => !f.showIf || f.showIf(item));
+    },
+    itemTitle(sec, item) {
+      if (sec.listKey === 'internships') {
+        const main = [item.company, item.department, item.role].filter(Boolean).join(' · ');
+        if (!main) return '';
+        const parts = [main];
+        if (item.employmentType) parts.push(`［${item.employmentType}］`);
+        const span = this.formatSpan(item);
+        if (span) parts.push(span);
+        return parts.join(' ');
+      }
+      if (sec.listKey === 'familyMembers') {
+        return [item.relation, item.name, item.workplace].filter(Boolean).join(' · ') || '';
+      }
+      const pmain = [item.name, item.type].filter(Boolean).join(' · ');
+      const pspan = this.formatSpan(item);
+      return pspan ? `${pmain} ${pspan}` : pmain;
+    },
+    formatSpan(item) {
+      const fmt = s => s ? s.replace('-', '.') : '';
+      const ongoing = item.isOngoing || item.isCurrentlyThere;
+      if (item.start && ongoing) return `${fmt(item.start)} — 至今`;
+      if (item.start && item.end) return `${fmt(item.start)} — ${fmt(item.end)}`;
+      if (item.start) return `${fmt(item.start)} —`;
+      return '';
+    },
+    addItem(sec) {
+      const item = S.buildEmptyListItem(sec);
+      // 校招语境下绝大多数是实习，预设为默认值省一次点击
+      if (sec.listKey === 'internships') item.employmentType = '实习';
+      this.data[sec.listKey].push(item);
+    },
+    removeItem(sec, idx) {
+      if (confirm('确定删除这一条？删除后无法恢复。')) {
+        this.data[sec.listKey].splice(idx, 1);
+      }
+    },
+    next() {
+      if (this.step < this.visibleSections.length) this.step++;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    prev() {
+      if (this.step > 0) this.step--;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    save() {
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(this.data));
+        const t = new Date();
+        this.saveHint = `已暂存 ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+      } catch (e) {
+        this.saveHint = '暂存失败';
+      }
+    },
+    load() {
+      try {
+        // 先试 v4，再尝试从 v3 迁移
+        let raw = localStorage.getItem(LS_KEY);
+        if (!raw) raw = localStorage.getItem('qiuzhao_profile_v3');
+        if (raw) {
+          this.data = S.migrate(JSON.parse(raw));
+          // 写入新 key，以后只读 v4
+          localStorage.setItem(LS_KEY, JSON.stringify(this.data));
+          this.saveHint = '已恢复上次填写';
+        }
+      } catch (e) { /* 损坏就用空白 */ }
+    },
+    exportData() {
+      // 敏感字段单独隔离到 _sensitive，方便用户分享前手动剥离
+      const sensitiveKeys = S.getSensitiveKeys();
+      const out = { ...this.data, _sensitive: {}, _exportedAt: new Date().toISOString() };
+      sensitiveKeys.forEach(k => {
+        const v = out[k];
+        if (Array.isArray(v) ? v.length : v) { out._sensitive[k] = v; delete out[k]; }
+      });
+      const name = (this.data.name || '未命名').replace(/[\\/:*?"<>|]/g, '');
+      const date = new Date().toISOString().slice(0, 10);
+      const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `秋招档案_${name}_${date}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    },
+    triggerImport() { this.$refs.fileInput.click(); },
+    handleImport(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const loaded = JSON.parse(ev.target.result);
+          // 还原敏感字段
+          if (loaded._sensitive) {
+            Object.assign(loaded, loaded._sensitive);
+            delete loaded._sensitive;
+          }
+          this.data = S.migrate(loaded);
+          this.save();
+          const fm = Array.isArray(this.data.familyMembers) ? this.data.familyMembers.length : 0;
+          alert(`导入成功！\n\n姓名：${this.data.name || '未填'}\n实习：${this.data.internships.length} 段\n项目：${this.data.projects.length} 个\n家庭成员：${fm} 位\n\n所有字段已恢复，可继续编辑。`);
+        } catch (err) {
+          alert('导入失败：文件不是有效的 JSON 格式。\n\n请确认选择的是本系统导出的档案文件。');
+        }
+        e.target.value = '';
+      };
+      reader.readAsText(file);
+    }
+  },
+  watch: {
+    data: {
+      deep: true,
+      handler() {
+        clearTimeout(this._timer);
+        this._timer = setTimeout(this.save, 600);
+      }
+    }
+  },
+  mounted() { this.load(); }
+}).mount('#app');
+</script>
+</body>
+</html>
