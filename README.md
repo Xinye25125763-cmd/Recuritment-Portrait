@@ -30,6 +30,24 @@ open http://localhost:8765
 
 ---
 
+## 演示模式（截图/录屏时不暴露真实信息）
+
+所有页面支持 `?demo=1` 参数加载虚构演示数据，**不会读取或覆盖你 localStorage 中的真实档案**。
+
+```
+https://<用户名>.github.io/<仓库名>/match.html?demo=1
+https://<用户名>.github.io/<仓库名>/resume.html?demo=1
+```
+
+演示数据人物：陈默（虚构，2027 届，数据分析方向）。进入演示模式后页面顶部会显示黄色横幅提示。
+
+**用途：**
+- 截图发朋友圈/小红书/牛客
+- 录屏做教程或展示
+- 让朋友帮忙看功能，不必暴露真实信息
+
+---
+
 ## 三阶段工作流
 
 | 阶段 | 页面 | 功能 |
@@ -130,7 +148,9 @@ qiuzhao-2027/
 │   ├── schema.js           字段定义 & 版本迁移 ← 改字段只需要动这里
 │   ├── portrait-engine.js  画像生成引擎（7维雷达 + 角色适配）
 │   ├── match-engine.js     岗位匹配引擎（六维评分 + 缺口分析）
-│   └── experience-miner.js 经历挖掘引擎（问题树 + STAR文案 + 五维评估）
+│   ├── experience-miner.js 经历挖掘引擎（问题树 + STAR文案 + 五维评估）
+│   ├── resume-engine.js    简历生成引擎（三源装配 + 加权裁剪 + 四态审计）
+│   └── demo-profile.js     演示数据档案（虚构人物，?demo=1 时加载）
 ├── jobs/
 │   ├── jd-library.json     JD 库（301条，支持动态扩展）
 │   └── README.md           JD 扩展指南 ← 加岗位先看这个
