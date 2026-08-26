@@ -20,6 +20,9 @@
   }
   .savehint{font-size:var(--text-xs);color:var(--ink-3);min-width:96px}
 
+  .demo-banner{background:#fff8e1;border:1px solid #ffd54f;border-radius:var(--radius-md);padding:var(--space-2) var(--space-4);font-size:var(--text-xs);color:#b28704;margin-bottom:var(--space-4);display:flex;align-items:center;gap:var(--space-2)}
+  .demo-banner::before{content:"演示模式";font-weight:600;background:#ffd54f;color:#fff;padding:1px 8px;border-radius:var(--radius-sm);font-size:11px}
+
   /* 进度 */
   .progress{display:flex;gap:var(--space-1);margin-top:var(--space-3);flex-wrap:wrap}
   .pstep{
@@ -170,6 +173,7 @@
 </head>
 <body>
 <div id="app">
+  <div v-if="demoMode" class="demo-banner">当前加载的是演示数据（陈默 · 虚构），仅供截图与公开展示使用，不会覆盖你的真实档案。去除 ?demo 参数即可恢复自己的数据。</div>
 
   <header>
     <div class="hrow">
@@ -405,7 +409,8 @@
 </div>
 
 <script src="./src/schema.js"></script>
-<script>
+<script type="module">
+import { getProfile } from './src/demo-profile.js';
 const { createApp } = Vue;
 const S = window.QZ_SCHEMA;
 const LS_KEY = 'qiuzhao_profile_v4';
@@ -416,6 +421,7 @@ createApp({
       data: S.buildEmptyData(),
       step: 0,
       saveHint: '',
+      demoMode: false,
       _timer: null
     };
   },
@@ -547,7 +553,13 @@ createApp({
       }
     },
     load() {
+      this.demoMode = new URLSearchParams(window.location.search).has('demo');
       try {
+        if (this.demoMode) {
+          this.data = getProfile();
+          this.saveHint = '已加载演示数据（不会保存到本地）';
+          return;
+        }
         // 先试 v4，再尝试从 v3 迁移
         let raw = localStorage.getItem(LS_KEY);
         if (!raw) raw = localStorage.getItem('qiuzhao_profile_v3');

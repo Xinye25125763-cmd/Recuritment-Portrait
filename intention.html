@@ -142,12 +142,16 @@
   @media print{
     .site-header,.btn,.intention-actions,.mining-panel{display:none!important}
     .intention-card{break-inside:avoid;margin-bottom:var(--space-2);border-color:#ccc}
-    body{font-size:13px;color:#000;background:#fff}
-  }
+body{font-size:13px;color:#000;background:#fff}
+}
+
+.demo-banner{background:#fff8e1;border:1px solid #ffd54f;border-radius:var(--radius-md);padding:var(--space-2) var(--space-4);font-size:var(--text-xs);color:#b28704;margin-bottom:var(--space-4);display:flex;align-items:center;gap:var(--space-2)}
+.demo-banner::before{content:"演示模式";font-weight:600;background:#ffd54f;color:#fff;padding:1px 8px;border-radius:var(--radius-sm);font-size:11px}
 </style>
 </head>
 <body>
 <div id="app">
+  <div v-if="demoMode" class="demo-banner">当前加载的是演示数据（陈默 · 虚构），仅供截图与公开展示使用，不会覆盖你的真实档案。去除 ?demo 参数即可恢复自己的数据。</div>
   <!-- 顶栏 -->
   <header>
     <div class="hrow">
@@ -469,6 +473,7 @@
 import { ExperienceMiner } from './src/experience-miner.js';
 import { matchAll, applyDealBreakers } from './src/match-engine.js';
 import { analyzePortrait } from './src/portrait-engine.js';
+import { getProfile } from './src/demo-profile.js';
 
 const { createApp } = Vue;
 const LS_KEY = 'qiuzhao_profile_v4';
@@ -480,6 +485,7 @@ createApp({
       loading: false,
       error: '',
       profileData: {},
+      demoMode: false,
       portrait: null,
       allJobs: [],
       intentions: [],
@@ -508,16 +514,21 @@ createApp({
       this.error = '';
       this.loading = true;
 
+      this.demoMode = new URLSearchParams(window.location.search).has('demo');
       try {
         // 1. 加载 profile
-        const raw = localStorage.getItem(LS_KEY);
-        if (!raw) {
-          this.error = '暂无档案数据。请先回到「信息填写」页面完成基础信息录入。';
-          this.loading = false;
-          this.loaded = true;
-          return;
+        if (this.demoMode) {
+          this.profileData = getProfile();
+        } else {
+          const raw = localStorage.getItem(LS_KEY);
+          if (!raw) {
+            this.error = '暂无档案数据。请先回到「信息填写」页面完成基础信息录入。';
+            this.loading = false;
+            this.loaded = true;
+            return;
+          }
+          this.profileData = JSON.parse(raw);
         }
-        this.profileData = JSON.parse(raw);
 
         // 2. 生成画像
         this.portrait = analyzePortrait(this.profileData);

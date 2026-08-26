@@ -159,6 +159,9 @@
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+  .demo-banner{background:#fff8e1;border:1px solid #ffd54f;border-radius:var(--radius-md);padding:var(--space-2) var(--space-4);font-size:var(--text-xs);color:#b28704;margin-bottom:var(--space-4);display:flex;align-items:center;gap:var(--space-2)}
+  .demo-banner::before{content:"演示模式";font-weight:600;background:#ffd54f;color:#fff;padding:1px 8px;border-radius:var(--radius-sm);font-size:11px}
+
   .ats-card{
     background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);
     padding:var(--space-5) var(--space-6);margin-bottom:var(--space-5);
@@ -187,7 +190,8 @@
 </head>
 <body>
 <div id="app">
-  <header>
+<div v-if="demoMode" class="demo-banner">当前加载的是演示数据（陈默 · 虚构），仅供截图与公开展示使用，不会覆盖你的真实档案。去除 ?demo 参数即可恢复自己的数据。</div>
+<header>
     <div class="hrow">
       <div class="logo">秋招画像系统 <span>· 简历生成</span></div>
       <div class="spacer"></div>
@@ -511,6 +515,7 @@ import { ExperienceMiner } from './src/experience-miner.js';
 import { matchAll } from './src/match-engine.js';
 import { analyzePortrait } from './src/portrait-engine.js';
 import { buildResume, auditKeywords, formatDate, BUDGET_PRESETS } from './src/resume-engine.js';
+import { getProfile } from './src/demo-profile.js';
 
 const { createApp } = Vue;
 const LS_KEY = 'qiuzhao_profile_v4';
@@ -520,6 +525,7 @@ createApp({
     return {
       profileData: {},
       portrait: null,
+      demoMode: false,
       allJobs: [],
       intentions: [],
       selectedJobId: '',
@@ -564,10 +570,15 @@ createApp({
 
   methods: {
     async init() {
+      this.demoMode = new URLSearchParams(window.location.search).has('demo');
       try {
-        const raw = localStorage.getItem(LS_KEY);
-        if (!raw) return;
-        this.profileData = JSON.parse(raw);
+        if (this.demoMode) {
+          this.profileData = getProfile();
+        } else {
+          const raw = localStorage.getItem(LS_KEY);
+          if (!raw) return;
+          this.profileData = JSON.parse(raw);
+        }
         this.portrait = analyzePortrait(this.profileData);
 
         const res = await fetch('./jobs/jd-library.json');

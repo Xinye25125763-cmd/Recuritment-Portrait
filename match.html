@@ -48,6 +48,9 @@
 
   /* 筛选 */
   .filter-bar{display:flex;gap:var(--space-4);flex-wrap:wrap;align-items:flex-start}
+
+  .demo-banner{background:#fff8e1;border:1px solid #ffd54f;border-radius:var(--radius-md);padding:var(--space-2) var(--space-4);font-size:var(--text-xs);color:#b28704;margin-bottom:var(--space-4);display:flex;align-items:center;gap:var(--space-2)}
+  .demo-banner::before{content:"演示模式";font-weight:600;background:#ffd54f;color:#fff;padding:1px 8px;border-radius:var(--radius-sm);font-size:11px}
   .filter-group{display:flex;flex-direction:column;gap:var(--space-1)}
   .filter-label{font-size:11px;color:var(--ink-3);font-weight:600;letter-spacing:.4px;text-transform:uppercase}
   .filter-options{display:flex;gap:var(--space-1);flex-wrap:wrap}
@@ -192,6 +195,7 @@
 </head>
 <body>
 <div id="app">
+  <div v-if="demoMode" class="demo-banner">当前加载的是演示数据（陈默 · 虚构），仅供截图与公开展示使用，不会覆盖你的真实档案。去除 ?demo 参数即可恢复自己的数据。</div>
   <!-- 顶栏 -->
   <header>
     <div class="hrow">
@@ -509,6 +513,7 @@ import {
   matchAll, applyDealBreakers, normalizeLocation,
 } from './src/match-engine.js';
 import { ExperienceMiner } from './src/experience-miner.js';
+import { getProfile } from './src/demo-profile.js';
 
 const { createApp } = Vue;
 
@@ -537,6 +542,7 @@ createApp({
       loading: false,
       error: '',
       profileData: {},
+      demoMode: false,
       portrait: null,
       results: [],
       allJobs: [],
@@ -616,22 +622,29 @@ createApp({
     async init() {
       this.error = '';
       this.loading = true;
+      this.demoMode = new URLSearchParams(window.location.search).has('demo');
 
       let raw;
-      try {
-        raw = localStorage.getItem(LS_KEY) || localStorage.getItem('qiuzhao_profile_v3');
-      } catch { raw = null; }
+      if (this.demoMode) {
+        this.profileData = getProfile();
+      } else {
+        try {
+          raw = localStorage.getItem(LS_KEY) || localStorage.getItem('qiuzhao_profile_v3');
+        } catch { raw = null; }
+      }
 
-      if (!raw) {
+      if (!this.profileData && !raw) {
         this.loading = false;
         this.loaded = false;
         return;
       }
 
       try {
-        this.profileData = window.QZ_SCHEMA
-          ? window.QZ_SCHEMA.migrate(JSON.parse(raw))
-          : JSON.parse(raw);
+        if (!this.profileData) {
+          this.profileData = window.QZ_SCHEMA
+            ? window.QZ_SCHEMA.migrate(JSON.parse(raw))
+            : JSON.parse(raw);
+        }
 
         this.portrait = analyzePortrait(this.profileData);
 
