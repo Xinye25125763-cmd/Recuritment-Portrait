@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>秋招画像 — 网申自动填充</title>
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+<div class="container">
+  <header class="header">
+    <h1>📝 秋招画像</h1>
+    <p class="subtitle">网申自动填充工具 · 数据零上传</p>
+  </header>
+
+  <section class="profile-section">
+    <h2>📂 档案数据</h2>
+    <div id="profile-status" class="status-box">
+      <span>正在检查档案...</span>
+    </div>
+    <input type="file" id="file-input" accept=".json,application/json" hidden>
+    <button class="btn btn-secondary" id="btn-import">📥 导入档案 JSON</button>
+    <div class="profile-info" id="profile-info" style="display:none;">
+      <div class="info-row"><span class="info-label">姓名</span><span class="info-value" id="info-name">—</span></div>
+      <div class="info-row"><span class="info-label">手机</span><span class="info-value" id="info-phone">—</span></div>
+      <div class="info-row"><span class="info-label">出生年月</span><span class="info-value" id="info-birth">—</span></div>
+      <div class="info-row"><span class="info-label">实习经历</span><span class="info-value" id="info-intern">—</span></div>
+      <div class="info-row"><span class="info-label">更新时间</span><span class="info-value" id="info-updated">—</span></div>
+    </div>
+    <button class="btn btn-secondary" id="btn-export" disabled>📤 导出档案</button>
+    <button class="btn btn-danger" id="btn-clear">🗑️ 清除档案</button>
+
+    <details class="custom-mapping" id="custom-mapping" style="margin-top:10px;">
+      <summary style="font-size:13px;font-weight:500;color:#4a5568;cursor:pointer;padding:4px 0;">⚙️ 自定义字段映射</summary>
+      <p class="hint" style="text-align:left;margin:4px 0;">当自动匹配不准时，可手动添加「网页字段名 → 档案字段」规则</p>
+      <div class="mapping-add">
+        <input type="text" id="map-label" placeholder="网页上的字段名（如：应聘人姓名）" style="width:100%;padding:6px 8px;border:1px solid #cbd5e0;border-radius:4px;font-size:12px;margin-bottom:4px;" />
+        <select id="map-field" style="width:100%;padding:6px 8px;border:1px solid #cbd5e0;border-radius:4px;font-size:12px;margin-bottom:4px;"></select>
+        <button class="btn btn-secondary" id="btn-add-mapping" style="width:100%;font-size:12px;padding:8px;">➕ 添加映射</button>
+      </div>
+      <div class="mapping-list" id="mapping-list"></div>
+    </details>
+  </section>
+
+  <section class="action-section">
+    <h2>🚀 执行</h2>
+    <div id="fill-status" class="status-box">
+      <span>正在检测当前页面...</span>
+    </div>
+    <button class="btn btn-primary" id="btn-fill" disabled>⚡ 一键填充当前页面</button>
+    <button class="btn btn-secondary" id="btn-preview" disabled style="margin-top:8px;">🔍 预览匹配结果</button>
+    <p class="hint">「一键填充」直接执行；「预览」可先检查匹配结果再确认填充</p>
+  </section>
+
+  <section class="result-section" id="result-section">
+    <h2>📊 填写结果</h2>
+    <div class="stats-grid">
+      <div class="stat-card info"><span class="stat-number" id="stat-total">–</span>页面字段</div>
+      <div class="stat-card success"><span class="stat-number" id="stat-filled">–</span>已填充</div>
+      <div class="stat-card warning"><span class="stat-number" id="stat-pending">–</span>待补/空值</div>
+      <div class="stat-card danger" title="无匹配规则，可在弹层中查看，欢迎反馈扩充同义词库"><span class="stat-number" id="stat-nomatch">–</span>无匹配</div>
+    </div>
+    <div class="detail-list" id="detail-list"></div>
+    <div class="manual-confirm-section" id="manual-confirm-section" style="display:none;">
+      <h3 style="color:#c53030;margin:12px 0 8px;font-size:13px;">⚠️ 以下 checkbox 需人工核对</h3>
+      <div class="detail-list" id="manual-confirm-list"></div>
+    </div>
+    <div class="preview-section" id="preview-section" style="display:none;">
+      <h3 style="margin:12px 0 6px;font-size:13px;">🔍 匹配结果预览（勾选后确认填充）</h3>
+      <div class="preview-toolbar">
+        <label><input type="checkbox" id="preview-check-all" checked> 全选</label>
+        <span id="preview-count" style="font-size:12px;color:#718096;">0 项</span>
+      </div>
+      <div class="preview-list" id="preview-list"></div>
+      <button class="btn btn-primary" id="btn-confirm-fill" style="margin-top:10px;">✅ 确认填充已选项</button>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>数据零上传 · 完全本地运行</p>
+    <p class="version" id="version">v0.2.0</p>
+  </footer>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>

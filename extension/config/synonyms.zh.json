@@ -1,0 +1,75 @@
+{
+  "version": "0.2.0",
+  "description": "秋招画像系统 — 网申字段同义词库（与主站 schema.js 对齐）",
+  "rules": [
+    { "fieldPath": "name", "fieldName": "姓名", "synonyms": ["姓名","名字","真实姓名","本人姓名","应聘者姓名","申请人姓名","姓名（中文）","中文名"], "fieldType": "text", "priority": 100 },
+    { "fieldPath": "gender", "fieldName": "性别", "synonyms": ["性别","性別"], "fieldType": "select", "options": { "男": ["男","男性","M","Male","man"], "女": ["女","女性","F","Female","woman"] }, "priority": 100 },
+    { "fieldPath": "birthMonth", "fieldName": "出生年月", "synonyms": ["出生年月","出生日期","生日","出生年月日","date of birth","DOB","出生时间"], "fieldType": "date", "priority": 100 },
+    { "fieldPath": "phone", "fieldName": "手机号", "synonyms": ["手机号","手机号码","联系电话","电话","手机","移动电话","mobile","phone","联系方式"], "fieldType": "tel", "priority": 100 },
+    { "fieldPath": "email", "fieldName": "邮箱", "synonyms": ["邮箱","电子邮箱","电子邮件","Email","E-mail","邮件地址","联系邮箱","email"], "fieldType": "email", "priority": 100 },
+    { "fieldPath": "currentCity", "fieldName": "现居城市", "synonyms": ["现居城市","现居住地","居住城市","所在城市","城市","居住地","常住地"], "fieldType": "text", "priority": 90 },
+    { "fieldPath": "politicalStatus", "fieldName": "政治面貌", "synonyms": ["政治面貌","政治状态","党派","政治身份","政治面目"], "fieldType": "select", "options": { "中共党员": ["中共党员","党员","共产党","中国共产党","正式党员"], "中共预备党员": ["中共预备党员","预备党员"], "共青团员": ["共青团员","团员","共青团"], "民主党派": ["民主党派","民盟","民建","民进","农工党","致公党","九三学社","台盟"], "群众": ["群众","无党派","普通群众"] }, "priority": 100 },
+    { "fieldPath": "partyJoinDate", "fieldName": "入党时间", "synonyms": ["入党时间","入党日期","加入党组织时间"], "fieldType": "date", "priority": 80 },
+    { "fieldPath": "ethnicity", "fieldName": "民族", "synonyms": ["民族","国籍","族别"," ethnicity","nation","民族类别"], "fieldType": "select", "options": { "汉族": ["汉族","汉"], "蒙古族": ["蒙古族","蒙古"], "回族": ["回族","回"], "藏族": ["藏族","藏"], "维吾尔族": ["维吾尔族","维吾尔"], "苗族": ["苗族","苗"], "彝族": ["彝族","彝"], "壮族": ["壮族","壮"], "满族": ["满族","满"] }, "priority": 100 },
+    { "fieldPath": "nativePlace", "fieldName": "籍贯", "synonyms": ["籍贯","出生地","祖籍","户籍所在地","户口所在地","出生地","原籍","籍贯所在地"], "fieldType": "text", "priority": 100 },
+    { "fieldPath": "hukou", "fieldName": "户口所在地", "synonyms": ["户口所在地","户籍所在地","户口","户籍"], "fieldType": "text", "priority": 90 },
+    { "fieldPath": "maritalStatus", "fieldName": "婚姻状况", "synonyms": ["婚姻状况","婚姻状态","婚否","婚姻","结婚状况"], "fieldType": "select", "options": { "未婚": ["未婚","单身","unmarried"], "已婚": ["已婚","married"] }, "priority": 80 },
+    { "fieldPath": "height", "fieldName": "身高", "synonyms": ["身高","身高(cm)","身高(厘米)","身高cm","height","体高"], "fieldType": "number", "priority": 60 },
+    { "fieldPath": "idNumber", "fieldName": "身份证号", "synonyms": ["身份证号","身份证号码","证件号码","ID Number","证件号","身份号","居民身份证号"], "fieldType": "text", "sensitive": true, "priority": 90 },
+    { "fieldPath": "emergencyContact", "fieldName": "紧急联系人", "synonyms": ["紧急联系人","紧急联系人姓名","紧急联络人","联系人"], "fieldType": "text", "sensitive": true, "priority": 70 },
+    { "fieldPath": "github", "fieldName": "GitHub", "synonyms": ["GitHub","github","GitHub主页","github主页","GitHub链接"], "fieldType": "text", "priority": 70 },
+    { "fieldPath": "blog", "fieldName": "技术博客", "synonyms": ["技术博客","个人主页","博客","blog","技术主页","个人网站"], "fieldType": "text", "priority": 60 },
+
+    { "fieldPath": "gradSchool", "fieldName": "研究生院校", "synonyms": ["研究生院校","研究生学校","硕士院校","硕士学校","博士院校","研究生毕业院校"], "fieldType": "text", "priority": 100 },
+    { "fieldPath": "gradCollege", "fieldName": "学院", "synonyms": ["学院","院系","所属学院","研究生学院"], "fieldType": "text", "priority": 90 },
+    { "fieldPath": "gradMajor", "fieldName": "专业", "synonyms": ["专业","研究方向","研究生专业","硕士专业","博士专业","所学专业"], "fieldType": "text", "priority": 100 },
+    { "fieldPath": "gradDegreeType", "fieldName": "学位类型", "synonyms": ["学位类型","学位类别","研究生学位类型","硕士学位类型"], "fieldType": "select", "options": { "学术型": ["学术型","学术学位","学硕"], "专业型": ["专业型","专业学位","专硕"] }, "priority": 80 },
+    { "fieldPath": "gradStart", "fieldName": "入学时间", "synonyms": ["入学时间","入学日期","就读开始时间","入学年月","研究生入学时间"], "fieldType": "date", "priority": 100 },
+    { "fieldPath": "gradEnd", "fieldName": "毕业时间", "synonyms": ["毕业时间","毕业日期","预计毕业时间","毕业年月","结束时间","离校时间","研究生毕业时间"], "fieldType": "date", "priority": 100 },
+    { "fieldPath": "gradGpa", "fieldName": "GPA", "synonyms": ["GPA","绩点","平均绩点","加权成绩","研究生GPA","研究生绩点"], "fieldType": "text", "priority": 80 },
+    { "fieldPath": "gradRank", "fieldName": "专业排名", "synonyms": ["专业排名","成绩排名","排名","研究生排名"], "fieldType": "text", "priority": 70 },
+    { "fieldPath": "advisor", "fieldName": "导师", "synonyms": ["导师","导师姓名","指导教师","研究生导师"], "fieldType": "text", "priority": 70 },
+    { "fieldPath": "researchArea", "fieldName": "研究方向", "synonyms": ["研究方向","研究领域","研究课题"], "fieldType": "text", "priority": 80 },
+    { "fieldPath": "thesisTitle", "fieldName": "论文题目", "synonyms": ["论文题目","学位论文题目","毕业论文题目","论文名称"], "fieldType": "text", "priority": 70 },
+    { "fieldPath": "ugSchool", "fieldName": "本科院校", "synonyms": ["本科院校","本科学校","毕业院校","院校","就读院校","学校","大学","毕业学校","在读院校","母校"], "fieldType": "text", "priority": 100 },
+    { "fieldPath": "ugMajor", "fieldName": "本科专业", "synonyms": ["本科专业","专业","主修专业","专业名称","所学专业","本科专业名称"], "fieldType": "text", "priority": 100 },
+    { "fieldPath": "ugTier", "fieldName": "院校层次", "synonyms": ["院校层次","学校层次","学校类型","院校类型","985","211","双一流"], "fieldType": "select", "options": { "985": ["985"], "211": ["211"], "双一流": ["双一流"], "普通一本": ["普通一本","一本"], "二本": ["二本","普通二本"], "海外院校": ["海外院校","海外"] }, "priority": 80 },
+    { "fieldPath": "ugStart", "fieldName": "本科入学时间", "synonyms": ["本科入学时间","本科入学日期","本科就读开始时间","本科入学年月"], "fieldType": "date", "priority": 90 },
+    { "fieldPath": "ugEnd", "fieldName": "本科毕业时间", "synonyms": ["本科毕业时间","本科毕业日期","本科预计毕业时间","本科毕业年月"], "fieldType": "date", "priority": 90 },
+    { "fieldPath": "ugGpa", "fieldName": "本科GPA", "synonyms": ["本科GPA","本科绩点","本科平均绩点","本科加权成绩"], "fieldType": "text", "priority": 70 },
+    { "fieldPath": "ugRank", "fieldName": "本科排名", "synonyms": ["本科排名","本科成绩排名","本科专业排名"], "fieldType": "text", "priority": 60 },
+    { "fieldPath": "highSchool", "fieldName": "高中学校", "synonyms": ["高中学校","高中","高中毕业学校","高中院校"], "fieldType": "text", "priority": 60 },
+    { "fieldPath": "mainCourses", "fieldName": "主修课程", "synonyms": ["主修课程","所学课程","课程","修读课程"], "fieldType": "textarea", "priority": 60 },
+
+    { "fieldPath": "targetDirections", "fieldName": "岗位方向", "synonyms": ["岗位方向","目标岗位","意向岗位","应聘方向","求职方向","岗位类别"], "fieldType": "text", "priority": 90 },
+    { "fieldPath": "targetCities", "fieldName": "目标城市", "synonyms": ["目标城市","期望城市","工作城市","意向城市","工作地点","工作地","期望工作地","期望工作地点"], "fieldType": "text", "priority": 100 },
+    { "fieldPath": "salaryFloor", "fieldName": "年薪底线", "synonyms": ["年薪底线","期望薪资","薪资要求","薪酬期望","工资要求","待遇要求","期望年薪","期望工资"], "fieldType": "text", "priority": 70 },
+    { "fieldPath": "careerConcerns", "fieldName": "顾虑", "synonyms": ["顾虑","担忧","担心","职业顾虑"], "fieldType": "textarea", "priority": 50 },
+
+    { "fieldPath": "skillsProficient", "fieldName": "熟练技能", "synonyms": ["熟练技能","专业技能","掌握技能","技能","技术栈"], "fieldType": "textarea", "priority": 70 },
+    { "fieldPath": "certificates", "fieldName": "证书", "synonyms": ["证书","资格证书","所获证书","英语等级","语言证书","专业证书"], "fieldType": "textarea", "priority": 70 },
+
+    { "fieldPath": "honorsNational", "fieldName": "国家级奖项", "synonyms": ["国家级奖项","省部级奖项","获奖情况","奖项","荣誉","奖励"], "fieldType": "textarea", "priority": 60 },
+    { "fieldPath": "honorsSchool", "fieldName": "校级奖项", "synonyms": ["校级奖项","学校奖项","校内奖项"], "fieldType": "textarea", "priority": 50 },
+    { "fieldPath": "scholarships", "fieldName": "奖学金", "synonyms": ["奖学金","所获奖学金"], "fieldType": "textarea", "priority": 60 },
+
+    { "fieldPath": "campusRoles", "fieldName": "学生干部经历", "synonyms": ["学生干部经历","干部经历","学生工作","社团经历","组织经历","干部任职","学生组织经历"], "fieldType": "textarea", "priority": 60 },
+    { "fieldPath": "volunteer", "fieldName": "志愿服务", "synonyms": ["志愿服务","志愿活动","志愿者经历","义工"], "fieldType": "textarea", "priority": 50 },
+    { "fieldPath": "socialPractice", "fieldName": "社会实践", "synonyms": ["社会实践","社会实践活动","实践经历","实习实践"], "fieldType": "textarea", "priority": 50 },
+
+    { "fieldPath": "selfSummary", "fieldName": "自我评价", "synonyms": ["自我评价","个人评价","自我描述","个人介绍","个人简介"], "fieldType": "textarea", "priority": 60 },
+    { "fieldPath": "extraNotes", "fieldName": "其他补充", "synonyms": ["其他补充","补充说明","备注","其他信息"], "fieldType": "textarea", "priority": 40 }
+  ],
+  "complexFields": {
+    "description": "以下字段为数组或复杂结构，MVP阶段暂不支持自动填写，将在后续版本支持",
+    "fields": [
+      { "fieldPath": "internships", "fieldName": "实习经历", "synonyms": ["实习经历","实习经验","工作经历","工作经验","实习"] },
+      { "fieldPath": "projects", "fieldName": "项目经历", "synonyms": ["项目经历","项目经验","项目","参与项目"] },
+      { "fieldPath": "familyMembers", "fieldName": "家庭成员", "synonyms": ["家庭成员","家庭主要成员","家属","亲人","家庭情况"] }
+    ]
+  },
+  "domainHints": {
+    "央国企": ["籍贯", "民族", "政治面貌", "生源地", "家庭主要成员", "身高", "体重", "高中学校", "学生干部经历"],
+    "互联网": ["GitHub", "技术栈", "期望薪资", "实习经历", "项目经历", "博客"]
+  }
+}

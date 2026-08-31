@@ -209,6 +209,8 @@
   <span class="workflow-step"><span class="num">3</span>意向岗位</span>
   <span class="workflow-arrow">→</span>
   <span class="workflow-step"><span class="num">4</span>简历生成</span>
+  <span class="workflow-arrow">→</span>
+  <span class="workflow-step"><span class="num">5</span>网申自动填充</span>
 </nav>
 
 <!-- ══ 填写区 ══ -->
@@ -394,6 +396,10 @@
           <button class="btn" @click="exportData" style="flex:1;min-width:160px;text-align:center;font-size:14px;padding:12px 20px">
             <div style="font-weight:600">导出 JSON</div>
             <div style="font-size:12px;font-weight:400;opacity:.7;margin-top:2px">备份档案，换设备可恢复</div>
+          </button>
+          <button class="btn btn-primary" @click="exportForExtension" style="flex:1;min-width:160px;text-align:center;font-size:14px;padding:12px 20px">
+            <div style="font-weight:600">📥 导出给插件使用</div>
+            <div style="font-size:12px;font-weight:400;opacity:.85;margin-top:2px">一键下载档案，导入秋招画像插件</div>
           </button>
         </div>
       </div>
@@ -587,6 +593,12 @@ createApp({
       a.download = `秋招档案_${name}_${date}.json`;
       a.click();
       URL.revokeObjectURL(a.href);
+    },
+    exportForExtension() {
+      // 与 exportData 相同，但文件名更明确，方便用户找到后导入插件
+      this.exportData();
+      this.saveHint = '已导出插件用档案';
+      alert('档案已导出！\n\n请按以下步骤使用插件：\n1. 在 Chrome 扩展管理页加载 extension/ 目录\n2. 打开任意网申页面，点击扩展图标\n3. 选择刚下载的 JSON 文件导入\n4. 点击「一键填充当前页面」\n\n（文件名为「秋招档案_xxx_日期.json」）');
     },
     triggerImport() { this.$refs.fileInput.click(); },
     handleImport(e) {

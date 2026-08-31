@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "秋招画像 — 网申自动填充",
+  "version": "0.2.0",
+  "description": "基于秋招画像系统档案，一键自动填写网申表单。数据零上传，完全本地运行。",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "assets/icon16.png",
+      "48": "assets/icon48.png",
+      "128": "assets/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background/main.js"
+  },
+  "icons": {
+    "16": "assets/icon16.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png"
+  }
+}
