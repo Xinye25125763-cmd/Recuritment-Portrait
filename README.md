@@ -12,7 +12,9 @@
 
 访问部署地址即可，无需安装任何软件。
 
-https://yub369302-cyber.github.io/Recuritment-Portrait/
+https://recuritment-portrait.top/
+
+（备用地址：https://yub369302-cyber.github.io/Recuritment-Portrait/）
 
 ### 本地运行
 
@@ -160,7 +162,7 @@ localStorage 是按域名和协议隔离的，这意味着：
 所有页面支持 `?demo=1` 参数加载虚构演示数据，不会读取或覆盖你 localStorage 中的真实档案。
 
 ```
-https://yub369302-cyber.github.io/Recuritment-Portrait/match.html?demo=1
+https://recuritment-portrait.top/match.html?demo=1
 ```
 
 演示数据人物：陈默（虚构，2027 届，数据分析方向）。进入演示模式后页面顶部会显示黄色横幅提示。
