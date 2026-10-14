@@ -52,3 +52,11 @@ node_modules/
 *~
 .env
 .env.*
+
+# 交付说明（含本地路径与派生数据信息，仅随 zip 分发，不公开）
+交付说明.md
+
+# 本地数据缓存（givemeoc 管道）
+givemeoc_cache.json
+enrichment.json
+pipeline/

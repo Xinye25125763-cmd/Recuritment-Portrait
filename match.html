@@ -652,6 +652,14 @@ createApp({
         if (!resp.ok) throw new Error(`JD 库加载失败 (HTTP ${resp.status})`);
         const lib = await resp.json();
         this.allJobs = lib.jobs || [];
+        // 本地增强库（givemeoc 派生数据，仅本地使用，公开部署 404 自动跳过）
+        try {
+          const resp2 = await fetch('./jobs/jd-library-givemeoc.json');
+          if (resp2.ok) {
+            const lib2 = await resp2.json();
+            this.allJobs = [...(lib2.jobs || []), ...this.allJobs];
+          }
+        } catch (e) { /* 增强库不存在，走纯内置库 */ }
 
         this.runMatch(this.profileData);
         this.initTempParams();
