@@ -6,13 +6,14 @@
  *
  * 设计原则（与 portrait-engine 一致）：
  * 1. 纯函数：不修改入参，所有输出均为新对象
- * 2. 容忍缺失：档案字段缺失时用中性分数（50-70），绝不抛错
+ * 2. 容忍缺失：用户偏好缺失时用中性分；岗位数据缺失的维度不参与评分
  * 3. 可解释：每个维度单独打分，理由从打分过程自动生成
  *
  * 评分模型：
  *   方向匹配 25% + 技能重叠 30% + 城市匹配 15% + 届次匹配 10%
  *   + 企业类型 10% + 经验相关 10%，另有画像强匹配加成 +5（总分封顶 100）
- *   等级：>=75 强匹配 strong / >=60 中匹配 medium / 其余弱匹配 weak
+ *   未提供岗位证据的维度会被略过，其余维度按可用权重归一化。
+ *   等级仍表示分数区间；confidence 单独表示岗位数据覆盖完整度。
  */
 
 // ══════════════════════════════════════════════════════════
@@ -76,7 +77,7 @@ export const TRACK_REGISTRY = {
 export const DIRECTION_TRACK_MAP = TRACK_REGISTRY.directionMap;
 
 /** 公司 → 企业类型（internet=互联网 / soe=央国企）。
- *  不在本表中的公司会走中性评分（不加分不扣分），无需预先注册。 */
+ *  未知公司不推断企业类别，其企业类型维度不参与评分。 */
 export const COMPANY_TYPE = {
   '字节跳动': 'internet',
   '美团': 'internet',
@@ -294,6 +295,7 @@ export function applyDealBreakers(jobs, profile) {
 
 /** 方向匹配：用户求职方向 ↔ JD track */
 function scoreDirection(job, profile) {
+  if (!job.track) return { score: null };
   const directions = profile.targetDirections || [];
   if (directions.length === 0) return { score: 50 }; // 未填写，中性
   const tracks = new Set(directions.map(d => DIRECTION_TRACK_MAP[d]).filter(Boolean));
@@ -308,7 +310,7 @@ function scoreDirection(job, profile) {
  *  （业务能力词通常不出现在 skillsProficient 栏，但用户做过的经历里会出现） */
 function scoreSkills(job, skillMap, userCorpus) {
   const kws = job.keywords || [];
-  if (kws.length === 0) return { score: 50 }; // JD 无关键词，中性
+  if (kws.length === 0) return { score: null }; // 没有岗位关键词时不假装完成技能评估
   if (skillMap.size === 0 && !userCorpus) return { score: 40 }; // 用户没填技能，略低中性
 
   let overlapScore = 0;
@@ -347,6 +349,7 @@ function scoreSkills(job, skillMap, userCorpus) {
 
 /** 城市匹配：用户目标城市 ↔ JD 地点（归一化后取交集） */
 function scoreLocation(job, profile) {
+  if (!Array.isArray(job.locations) || job.locations.length === 0) return { score: null };
   const cities = profile.targetCities || [];
   if (cities.length === 0) return { score: 70 }; // 未填写，中性
   if (cities.includes('不限')) return { score: 80, reason: '城市不限' };
@@ -364,6 +367,7 @@ function scoreLocation(job, profile) {
 function scoreProgram(job, profile) {
   const year = String(profile.graduationYear || '');
   const prog = job.program || '';
+  if (!prog) return { score: null };
   if (!year) return { score: 60 };
 
   const batchYear = prog.match(/(\d{4})/)?.[1] || null;
@@ -382,14 +386,29 @@ function scoreProgram(job, profile) {
 
 /** 企业类型：trackWeight + targetTracks 双信号 */
 function scoreCompany(job, profile) {
-  const type = COMPANY_TYPE[job.company] || 'internet';
+  const rawType = String(job.companyType || '').trim();
+  const sourceTypes = {
+    '央国企': 'soe',
+    '国企': 'soe',
+    '事业单位': 'public',
+    '外企': 'foreign',
+    '外企/合资': 'foreign',
+    '合资': 'foreign',
+    '互联网': 'internet',
+  };
+  const type = sourceTypes[rawType] || COMPANY_TYPE[job.company];
+  if (!type) return { score: null };
   const tracks = profile.targetTracks || [];
 
-  // 信号一：targetTracks 没勾该类型 → 强降权（硬偏好）
-  const wantsInternet = tracks.length === 0 || tracks.includes('互联网大厂') || tracks.includes('中小厂/创业公司') || tracks.includes('外企');
-  const wantsSoe = tracks.length === 0 || tracks.includes('央国企') || tracks.includes('事业单位/高校');
-  if (type === 'internet' && !wantsInternet) return { score: 25 };
-  if (type === 'soe' && !wantsSoe) return { score: 25 };
+  const preferences = {
+    internet: ['互联网大厂', '中小厂/创业公司', '外企'],
+    soe: ['央国企'],
+    public: ['事业单位/高校'],
+    foreign: ['外企'],
+  };
+  if (tracks.length > 0 && !preferences[type]?.some(pref => tracks.includes(pref))) return { score: 25 };
+  if (type === 'public') return { score: tracks.length > 0 ? 100 : 75, reason: '事业单位岗位类别' };
+  if (type === 'foreign') return { score: tracks.length > 0 ? 100 : 75, reason: '外企/合资岗位类别' };
 
   // 信号二：trackWeight 细分倾向
   const table = {
@@ -408,8 +427,9 @@ function scoreCompany(job, profile) {
 
 /** 经验相关：用户经历语料 ↔ JD 文本 的字符 bigram 相似度 */
 function scoreExperience(job, userCorpus) {
+  if (!Array.isArray(job.responsibilities) || job.responsibilities.length === 0) return { score: null };
   if (!userCorpus || userCorpus.trim().length < 20) return { score: 50 }; // 经历太少，中性
-  const jdText = [job.title, ...(job.responsibilities || [])].join('\n');
+  const jdText = [job.title, ...job.responsibilities].join('\n');
   if (!jdText.trim()) return { score: 50 };
 
   const a = bigrams(userCorpus);
@@ -465,7 +485,7 @@ function findGapNotes(job, skillMap, userCorpus, profile) {
  * @param {Object} profile - 用户档案
  * @param {Object} [portrait] - 画像（analyzePortrait 产物，用于加成）
  * @param {Map<string, number>} [skillMap] - 预提取的技能表（性能优化：批量调用时传入）
- * @returns {{job: Object, score: number, level: string, reasons: string[], gaps: string[], dimScores: Object}}
+ * @returns {{job: Object, score: number, level: string, reasons: string[], gaps: string[], dimScores: Object, dataCoverage: number, confidence: string}}
  */
 export function matchJob(job, profile, portrait, skillMap) {
   const skills = skillMap ?? extractUserSkills(profile);
@@ -480,19 +500,26 @@ export function matchJob(job, profile, portrait, skillMap) {
     experience: scoreExperience(job, corpus),
   };
 
-  let score = 0;
+  let weightedScore = 0;
+  let availableWeight = 0;
   for (const [key, dim] of Object.entries(dims)) {
-    score += dim.score * DIM_WEIGHTS[key] / 100;
+    if (dim.score === null || dim.score === undefined) continue;
+    weightedScore += dim.score * DIM_WEIGHTS[key];
+    availableWeight += DIM_WEIGHTS[key];
   }
+  let score = availableWeight > 0 ? weightedScore / availableWeight : 50;
   score += portraitBonus(job, portrait);
   score = Math.max(0, Math.min(100, Math.round(score)));
+  const dataCoverage = availableWeight;
+  const confidence = dataCoverage === 100 ? 'complete' : 'limited';
 
   // 理由：按维度得分降序取 top 3（只保留有 reason 的）
   const reasons = Object.entries(dims)
-    .sort((x, y) => y[1].score - x[1].score)
+    .sort((x, y) => (y[1].score ?? -1) - (x[1].score ?? -1))
     .filter(([, d]) => d.reason && d.score >= 60)
     .slice(0, 3)
     .map(([, d]) => d.reason);
+  if (confidence === 'limited') reasons.push('岗位资料有限（覆盖率 ' + dataCoverage + '%），当前分数仅按可用维度计算');
 
   const level = score >= 75 ? 'strong' : score >= 60 ? 'medium' : 'weak';
 
@@ -503,6 +530,8 @@ export function matchJob(job, profile, portrait, skillMap) {
     reasons,
     gaps: findGapNotes(job, skills, corpus, profile),
     dimScores: Object.fromEntries(Object.entries(dims).map(([k, d]) => [k, d.score])),
+    dataCoverage,
+    confidence,
   };
 }
 

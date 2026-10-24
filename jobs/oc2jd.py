@@ -1,23 +1,31 @@
 # -*- coding: utf-8 -*-
 """
-oc2jd.py — 把 givemeoc校招汇总.xlsx 转换为 Recuritment-Portrait 的 JD 增强库
-- 只保留 track 可推断（数据分析/商业分析/产品经理）且未截止的记录
-- track 落空的记录整条丢弃（引擎不认识多余 track，入库只会污染匹配列表）
-- id 幂等: "OC"+md5(company|track|title)[:8]，重复运行不产生重复
-- 输出 jobs/jd-library-givemeoc.json（gitignored，仅本地使用）
+oc2jd.py — 把公司级职位列表转换为本地职位线索库
+- 每个职位片段独立推断方向；不推测逐岗职责或关键词
+- 只输出支持方向且尚未截止的线索
+- 相同公司、岗位、方向、批次、投递入口和截止日期合并地点
+- 稳定 ID 由职位身份字段哈希产生，输出 jobs/jd-library-givemeoc.json
+- 默认路径相对于脚本，可通过 --input 和 --output 覆盖
 """
+import argparse
 import hashlib
 import json
 import re
-import sys
 from datetime import date
+from pathlib import Path
 
 import openpyxl
 
-XLSX = r"E:\小玩意儿\givemeoc校招汇总.xlsx"
-OUT = r"E:\小玩意儿\Recuritment-Portrait\jobs\jd-library-givemeoc.json"
+SCRIPT_DIR = Path(__file__).resolve().parent
+PIPELINE_DIRS = (SCRIPT_DIR.parent / "pipeline", SCRIPT_DIR.parent.parent / "pipeline")
+DEFAULT_XLSX = next(
+    (directory / "givemeoc校招汇总.xlsx" for directory in PIPELINE_DIRS
+     if (directory / "givemeoc校招汇总.xlsx").is_file()),
+    PIPELINE_DIRS[0] / "givemeoc校招汇总.xlsx",
+)
+DEFAULT_OUT = SCRIPT_DIR / "jd-library-givemeoc.json"
 
-# track 关键词（推断规则来自 oc-integration-design.md §P0）
+# 支持方向的关键词词典
 TRACK_KW = [
     ("数据分析", ["数据分析", "数据挖掘", "数据科学", "BI", "经营分析", "数据运营", "数据工程", "数据开发", "商业数据分析"]),
     ("商业分析", ["商业分析", "战略", "咨询", "投资分析", "市场研究", "行业研究", "战略分析"]),
@@ -73,6 +81,11 @@ def infer_track(pos):
     return None, None, -1
 
 
+def split_positions(raw):
+    """按源表中可靠的职位分隔符拆分；斜杠可能属于职位名，保留在片段内。"""
+    return [part.strip() for part in re.split(r"[,，、;；\r\n]+", str(raw or "")) if part.strip()]
+
+
 def extract_title(pos, track, kw, i):
     """title 跟随 track 关键词：按分隔符切分岗位串，取含关键词的完整职位段"""
     for seg in re.split(r"[，,、；;。/（）()：:]", pos):
@@ -83,7 +96,7 @@ def extract_title(pos, track, kw, i):
     for suf in TITLE_SUFFIX:
         if after.startswith(suf):
             return kw + suf
-    return track + "类岗位"
+    return pos.strip()
 
 
 def split_locations(loc):
@@ -108,62 +121,140 @@ def is_open(ddl, today):
     return s >= today
 
 
-def main():
-    today = date.today().isoformat()
-    wb = openpyxl.load_workbook(XLSX, read_only=True)
-    ws = wb["校招汇总"]
-    jobs, dropped_no_track, dropped_closed, seen_ids, stats = [], 0, 0, set(), {}
-    for r in ws.iter_rows(min_row=2, values_only=True):
-        (name, ctype, industry, rectype, target, loc, pos, upd, ddl, note, entry, desc) = r[1:13]
-        if not name or not pos:
+def _text(value):
+    return str(value).strip() if value is not None else ""
+
+
+def convert_rows(rows, today=None):
+    """把工作簿行转成可供职位线索展示的记录，不推测 JD 职责或关键词。"""
+    today = today or date.today().isoformat()
+    jobs_by_id = {}
+    dropped_no_track = 0
+    dropped_closed = 0
+    stats = {}
+
+    for row in rows:
+        if len(row) < 13:
             continue
-        pos_s = str(pos)
-        track, kw, kw_idx = infer_track(pos_s)
-        if not track:
-            dropped_no_track += 1
+        (name, company_type, industry, rectype, target, location, positions,
+         updated, deadline, _note, entry, _posting_note) = row[1:13]
+        name = _text(name)
+        if not name or not positions:
             continue
-        if not is_open(ddl, today):
+
+        deadline_text = _text(deadline)
+        if not is_open(deadline_text, today):
             dropped_closed += 1
             continue
-        title = extract_title(pos_s, track, kw, kw_idx)
-        emp = "实习" if rectype in INTERNSHIP_TYPE or any(k in str(rectype) for k in INTERNSHIP_KW) else "正式"
-        jid = "OC" + hashlib.md5(f"{name}|{track}|{title}|{rectype}".encode()).hexdigest()[:8]
-        # 同键冲突时追加序号，保证 id 唯一
-        base_jid, seq = jid, 2
-        while jid in seen_ids:
-            jid = f"{base_jid}-{seq}"
-            seq += 1
-        seen_ids.add(jid)
-        job = {
-            "id": jid,
-            "company": name,
-            "title": title,
-            "track": track,
-            "employmentType": emp,
-            "program": f"{target or '2027届'}{rectype or ''}".strip(),
-            "locations": split_locations(str(loc or "")),
-            "description": pos_s,
-            "url": entry or "",
-            "deadline": str(ddl or ""),
-            "crawlDate": str(upd or today),
-            "source": "givemeoc",
-        }
-        jobs.append(job)
-        stats[track] = stats.get(track, 0) + 1
-    wb.close()
 
-    lib = {
-        "version": "1.0",
+        for segment in split_positions(positions):
+            track, keyword, keyword_index = infer_track(segment)
+            if not track:
+                dropped_no_track += 1
+                continue
+
+            title = extract_title(segment, track, keyword, keyword_index)
+            rectype_text = _text(rectype)
+            target_text = _text(target) or "2027届"
+            program = (target_text + rectype_text).strip()
+            employment_type = (
+                "实习" if rectype_text in INTERNSHIP_TYPE
+                or any(term in rectype_text for term in INTERNSHIP_KW)
+                else "正式"
+            )
+            url = _text(entry)
+            identity = [
+                name, track, title.casefold(), program.casefold(),
+                url, deadline_text.casefold(),
+            ]
+            identity_json = json.dumps(identity, ensure_ascii=False, separators=(",", ":"))
+            job_id = "OC" + hashlib.md5(identity_json.encode("utf-8")).hexdigest()[:12]
+            locations = split_locations(_text(location))
+
+            job = {
+                "id": job_id,
+                "company": name,
+                "companyType": _text(company_type),
+                "industry": _text(industry),
+                "title": title,
+                "track": track,
+                "employmentType": employment_type,
+                "program": program,
+                "locations": locations,
+                "sourceListing": segment,
+                "descriptionType": "position_listing",
+                "sourceType": "company_listing",
+                "url": url,
+                "deadline": deadline_text,
+                "crawlDate": _text(updated) or today,
+                "source": "givemeoc",
+            }
+
+            existing = jobs_by_id.get(job_id)
+            if existing:
+                seen_locations = set(existing["locations"])
+                for location_name in locations:
+                    if location_name not in seen_locations:
+                        existing["locations"].append(location_name)
+                        seen_locations.add(location_name)
+            else:
+                jobs_by_id[job_id] = job
+                stats[track] = stats.get(track, 0) + 1
+
+    return {
+        "version": "1.1",
         "lastUpdate": today,
-        "jobs": jobs,
+        "jobs": list(jobs_by_id.values()),
+        "stats": {
+            "droppedNoTrack": dropped_no_track,
+            "droppedClosed": dropped_closed,
+        },
     }
-    with open(OUT, "w", encoding="utf-8") as f:
-        json.dump(lib, f, ensure_ascii=False, indent=2)
-    print(f"OK jobs={len(jobs)} by_track={stats} dropped_no_track={dropped_no_track} dropped_closed={dropped_closed}")
-    # 幂等校验
-    ids = [j["id"] for j in jobs]
-    assert len(ids) == len(set(ids)), "id 冲突！"
-    print("id 幂等校验通过")
+
+
+def convert_workbook(input_path, output_path, today=None):
+    workbook = openpyxl.load_workbook(input_path, read_only=True, data_only=True)
+    try:
+        sheet = workbook["校招汇总"]
+        library = convert_rows(sheet.iter_rows(min_row=2, values_only=True), today=today)
+    finally:
+        workbook.close()
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        json.dumps(library, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    ids = [job["id"] for job in library["jobs"]]
+    if len(ids) != len(set(ids)):
+        raise ValueError("岗位 ID 冲突")
+    return library
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(description="将 GiveMeOC 校招职位列表转换为本地岗位线索库")
+    parser.add_argument("--input", type=Path, default=DEFAULT_XLSX, help="源工作簿路径")
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUT, help="生成 JSON 路径")
+    parser.add_argument("--today", help="用于截止日期过滤的 YYYY-MM-DD 日期（主要用于重现和测试）")
+    return parser
+
+
+def main(argv=None):
+    args = build_parser().parse_args(argv)
+    library = convert_workbook(args.input, args.output, today=args.today)
+    stats = {}
+    for job in library["jobs"]:
+        stats[job["track"]] = stats.get(job["track"], 0) + 1
+    print(
+        "OK jobs={} by_track={} dropped_no_track={} dropped_closed={}".format(
+            len(library["jobs"]),
+            stats,
+            library["stats"]["droppedNoTrack"],
+            library["stats"]["droppedClosed"],
+        )
+    )
+    print("id 稳定性校验通过")
 
 
 if __name__ == "__main__":

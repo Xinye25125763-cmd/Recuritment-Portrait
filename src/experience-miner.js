@@ -509,169 +509,146 @@ function findExperience(id, profile) {
 
 const BULLET_TEMPLATES = {
   'AB实验': {
-    full: '设计{scope}对照实验，覆盖{sample_size}，验证{metric}较{benchmark}提升{lift}，{impact}。',
-    simple: '通过{scope}实验验证{metric}效果，样本量{sample_size}，实验组较对照组{lift}。',
-    minimal: '基于{sample_size}样本开展{metric}效果评估，{lift}。'
+    full: '{method}，样本量：{sample_size}，指标：{metric}，结果：{lift}，业务影响：{impact}。',
+    simple: '{method}，指标：{metric}，结果：{lift}。',
+    minimal: '{method}，结果：{lift}。'
   },
   '指标体系': {
-    full: '搭建{scope}指标体系，覆盖{count}个核心指标，通过{tool}实现{frequency}监控，{impact}。',
-    simple: '设计并维护{scope}数据看板，整合{count}个过程指标，{impact}。',
-    minimal: '建立{scope}核心指标监控，{impact}。'
+    full: '{scope}，指标范围：{count}，使用工具：{tool}，监控频率：{frequency}，业务影响：{impact}。',
+    simple: '{scope}，指标范围：{count}，业务影响：{impact}。',
+    minimal: '{scope}，业务影响：{impact}。'
   },
   '用户增长': {
-    full: '通过{channel}实现{scope}增长，覆盖{sample_size}，{metric}提升{lift}，{impact}。',
-    simple: '负责{scope}增长运营，{metric}较基准{lift}。',
-    minimal: '参与{scope}增长工作，{metric}有所改善。'
+    full: '渠道：{channel}，范围：{scope}，样本量：{sample_size}，指标：{metric}，结果：{lift}，业务影响：{impact}。',
+    simple: '渠道：{channel}，指标：{metric}，结果：{lift}。',
+    minimal: '指标：{metric}，结果：{lift}。'
   },
   '数据驱动': {
-    full: '基于{analysis}发现{insight}，推动{stakeholders}采纳数据建议，{impact}。',
-    simple: '通过数据分析支撑{scope}决策，{impact}。',
-    minimal: '参与数据支持工作，辅助{scope}决策。'
+    full: '分析依据：{analysis}，发现：{insight}，协作方：{stakeholders}，业务影响：{impact}。',
+    simple: '分析依据：{analysis}，发现：{insight}，业务影响：{impact}。',
+    minimal: '发现：{insight}，业务影响：{impact}。'
   },
   '商业分析': {
-    full: '针对{scope}开展商业分析，运用{method}识别{insight}，{impact}。',
-    simple: '负责{scope}分析，发现{insight}，{impact}。',
-    minimal: '参与{scope}分析工作。'
+    full: '分析范围：{scope}，方法：{method}，发现：{insight}，业务影响：{impact}。',
+    simple: '分析范围：{scope}，发现：{insight}，业务影响：{impact}。',
+    minimal: '分析范围：{scope}，发现：{insight}。'
   },
   '策略制定': {
-    full: '基于{analysis}制定{scope}策略，协调{stakeholders}推进落地，{impact}。',
-    simple: '参与{scope}策略制定，{impact}。',
-    minimal: '参与{scope}策略讨论。'
+    full: '分析依据：{analysis}，策略范围：{scope}，协作方：{stakeholders}，业务影响：{impact}。',
+    simple: '策略范围：{scope}，协作方：{stakeholders}，业务影响：{impact}。',
+    minimal: '策略范围：{scope}，业务影响：{impact}。'
   },
   '数据挖掘': {
-    full: '基于{method}构建{scope}模型，处理{sample_size}数据，{metric}提升{lift}，{impact}。',
-    simple: '运用{method}完成{scope}分析，{impact}。',
-    minimal: '参与{scope}数据挖掘工作。'
+    full: '方法：{method}，工作范围：{scope}，数据量：{sample_size}，指标：{metric}，结果：{lift}，业务影响：{impact}。',
+    simple: '方法：{method}，工作范围：{scope}，指标：{metric}，结果：{lift}。',
+    minimal: '方法：{method}，工作范围：{scope}。'
   },
   '产品运营': {
-    full: '负责{scope}运营，通过{method}实现{metric}提升{lift}，{impact}。',
-    simple: '参与{scope}运营，{metric}有所改善。',
-    minimal: '参与{scope}运营支持。'
+    full: '工作范围：{scope}，方法：{method}，指标：{metric}，结果：{lift}，业务影响：{impact}。',
+    simple: '工作范围：{scope}，方法：{method}，指标：{metric}，结果：{lift}。',
+    minimal: '工作范围：{scope}，方法：{method}。'
   },
   '竞品分析': {
-    full: '完成{scope}竞品分析，对比{dimensions}，发现{insight}，{impact}。',
-    simple: '参与{scope}竞品研究，发现{insight}。',
-    minimal: '了解{scope}竞品动态。'
+    full: '分析范围：{scope}，对比维度：{dimensions}，发现：{insight}，业务影响：{impact}。',
+    simple: '分析范围：{scope}，对比维度：{dimensions}，发现：{insight}。',
+    minimal: '分析范围：{scope}，发现：{insight}。'
   },
   '项目管理': {
-    full: '主导{scope}项目，协调{stakeholders}，{challenge}，最终{impact}。',
-    simple: '参与{scope}项目，{impact}。',
-    minimal: '参与{scope}项目执行。'
+    full: '项目范围：{scope}，协作方：{stakeholders}，挑战：{challenge}，业务影响：{impact}。',
+    simple: '项目范围：{scope}，协作方：{stakeholders}，业务影响：{impact}。',
+    minimal: '项目范围：{scope}，挑战：{challenge}。'
   }
 };
 
 const DEFAULT_TEMPLATES = {
-  full: '基于{method}完成{scope}工作，{impact}。',
-  simple: '参与{scope}相关工作，{impact}。',
-  minimal: '了解{scope}相关领域。'
+  full: '方法：{method}，工作范围：{scope}，业务影响：{impact}。',
+  simple: '方法：{method}，工作范围：{scope}，结果：{lift}。',
+  minimal: '工作范围：{scope}，结果：{lift}。'
 };
 
 export function generateBullet(session, keyword, experience) {
   const templates = BULLET_TEMPLATES[keyword] || DEFAULT_TEMPLATES;
   const answers = {};
   (session.qaLog || []).forEach(q => { answers[q.stepId] = q.answer; });
+  if (!Object.values(answers).some(isUsableAnswer)) return '';
 
-  // 根据回答完整度选择模板
   const template = selectBestTemplate(templates, answers);
+  const values = {
+    scope: extractScope(experience, answers),
+    sample_size: answers.sample_size,
+    metric: answers.metrics || answers.growth_metrics || answers.metric,
+    lift: answers.result,
+    impact: answers.impact || answers.metrics_impact || answers.biz_result || answers.pm_result,
+    tool: answers.metrics_tool,
+    count: answers.metrics_scope,
+    method: answers.method || answers.growth_method || answers.biz_method || answers.mining_model || answers.has_experiment,
+    insight: answers.insight || answers.competitor_insight || answers.biz_result,
+    stakeholders: answers.driven_stakeholders || answers.pm_stakeholders,
+    analysis: answers.driven_example || answers.strategy_analysis,
+    challenge: answers.pm_challenge,
+    dimensions: answers.competitor_scope,
+    channel: answers.growth_channel,
+    frequency: answers.frequency || answers.metrics_frequency,
+  };
+  if (values.insight && values.insight === values.impact) values.impact = null;
 
-  // 提取关键变量
-  const scope = extractScope(keyword, experience, answers);
-  const sampleSize = extractNumber(answers.sample_size) || '一定规模';
-  const metric = answers.metrics || answers.growth_metrics || answers.metric || '核心指标';
-  const lift = extractLift(answers.result) || '显著提升';
-  const impact = answers.impact || answers.metrics_impact || answers.growth_method || answers.biz_result || '支撑业务决策';
-  const tool = answers.metrics_tool || '数据工具';
-  const count = extractNumber(answers.metrics_scope) || '多';
-  const method = answers.method || answers.growth_method || answers.biz_method || answers.mining_model || '专业方法';
-  const insight = answers.insight || answers.competitor_insight || answers.biz_result || '关键洞察';
-  const stakeholders = answers.driven_stakeholders || answers.pm_scope || '相关团队';
-  const analysis = answers.driven_example || answers.strategy_analysis || '数据分析';
-  const challenge = answers.pm_challenge || '克服困难';
-  const dimensions = answers.competitor_scope || '核心维度';
-  const channel = answers.growth_channel || '有效手段';
-  const frequency = '定期';
-  const benchmark = '基准';
-
-  // 如果 insight 和 impact 来源相同，避免重复
-  let safeInsight = insight;
-  let safeImpact = impact;
-  if (safeInsight === safeImpact && safeInsight.length > 4) {
-    safeImpact = '支撑业务决策';
-  }
-
-  // 填充模板
-  let bullet = template
-    .replace(/{scope}/g, scope)
-    .replace(/{sample_size}/g, sampleSize)
-    .replace(/{metric}/g, metric)
-    .replace(/{lift}/g, lift)
-    .replace(/{impact}/g, safeImpact)
-    .replace(/{tool}/g, tool)
-    .replace(/{count}/g, count)
-    .replace(/{method}/g, method)
-    .replace(/{insight}/g, safeInsight)
-    .replace(/{stakeholders}/g, stakeholders)
-    .replace(/{analysis}/g, analysis)
-    .replace(/{challenge}/g, challenge)
-    .replace(/{dimensions}/g, dimensions)
-    .replace(/{channel}/g, channel)
-    .replace(/{frequency}/g, frequency)
-    .replace(/{benchmark}/g, benchmark);
-
-  // 清理多余标点
-  bullet = bullet.replace(/，。/g, '。').replace(/。，/g, '，').replace(/，{2,}/g, '，').replace(/。{2,}/g, '。');
-
-  // 去重：连续重复的子串（>=8字）只保留一次
-  bullet = deduplicateBullet(bullet);
-
-  return bullet;
+  let bullet = renderGroundedTemplate(template, values);
+  if (!bullet) bullet = formatAnswersAsFacts(answers);
+  return deduplicateBullet(bullet);
 }
 
 function selectBestTemplate(templates, answers) {
-  const answerCount = Object.keys(answers).filter(k => answers[k] && !['没有', '跳过'].includes(answers[k])).length;
+  const answerCount = Object.values(answers).filter(isUsableAnswer).length;
   if (answerCount >= 4 && templates.full) return templates.full;
   if (answerCount >= 2 && templates.simple) return templates.simple;
   return templates.minimal || templates.full || '完成相关工作。';
 }
 
-function extractScope(keyword, experience, answers) {
-  if (experience) {
-    const biz = experience.business || '';
-    if (biz) return biz + '业务';
-    if (experience.company) return experience.company + '相关';
-    if (experience.name) return experience.name + '相关';
-  }
-  return keyword + '相关';
+function extractScope(experience, answers) {
+  return answers.scope || answers.biz_scope || answers.strategy_scope || answers.pm_scope ||
+    (experience && (experience.business || experience.name)) || null;
 }
 
-function extractNumber(text) {
-  if (!text) return null;
-  const match = text.match(/(\d+(?:\.\d+)?)\s*(万|千|百|亿|k|w)?/);
-  if (!match) return null;
-  const num = match[1];
-  const unit = match[2] || '';
-  return num + unit;
+function isUsableAnswer(answer) {
+  if (answer === null || answer === undefined) return false;
+  const text = String(answer).trim();
+  return Boolean(text) && !/^(没有|跳过|否|无|未做过|不适用)$/.test(text);
 }
 
-function extractLift(text) {
-  if (!text) return null;
-  // 提取百分比
-  const pctMatch = text.match(/(\d+(?:\.\d+)?)\s*%/);
-  if (pctMatch) return `提升${pctMatch[1]}%`;
-  // 提取倍数
-  const timesMatch = text.match(/(\d+(?:\.\d+)?)\s*倍/);
-  if (timesMatch) return `提升${timesMatch[1]}倍`;
-  // 提取数字对比
-  const vsMatch = text.match(/(\d+(?:\.\d+)?)\s*[vV][sS]\s*(\d+(?:\.\d+)?)/);
-  if (vsMatch) {
-    const a = parseFloat(vsMatch[1]);
-    const b = parseFloat(vsMatch[2]);
-    if (b > 0) {
-      const pct = ((a - b) / b * 100).toFixed(0);
-      return `提升${pct}%`;
-    }
+function renderGroundedTemplate(template, values) {
+  const parts = template.match(/[^，。；]+[，。；]?/g) || [];
+  const rendered = [];
+  for (const part of parts) {
+    const tokens = [...part.matchAll(/\{([a-z_]+)\}/g)].map(match => match[1]);
+    if (!tokens.length || !tokens.every(key => isUsableAnswer(values[key]))) continue;
+    rendered.push(part.replace(/\{([a-z_]+)\}/g, (_match, key) => String(values[key]).trim()));
   }
-  return text.length > 10 ? text.substring(0, 10) + '...' : text;
+  const text = rendered.join('')
+    .replace(/[，；]\s*[，；。]/g, '。')
+    .replace(/[，；]{2,}/g, '，')
+    .replace(/^[，；。]+|[，；。]+$/g, '')
+    .trim();
+  return text ? text + '。' : '';
+}
+
+function formatAnswersAsFacts(answers) {
+  const labels = {
+    has_experiment: '实验情况',
+    has_metrics: '指标工作',
+    has_growth: '增长工作',
+    has_driven: '数据应用',
+    has_biz: '商业分析',
+    has_strategy: '策略工作',
+    has_mining: '数据挖掘',
+    has_operation: '运营工作',
+    has_competitor: '竞品分析',
+    has_pm: '项目参与',
+    has_relevant: '相关经历',
+  };
+  return Object.entries(answers)
+    .filter(([, answer]) => isUsableAnswer(answer))
+    .map(([key, answer]) => (labels[key] || key) + '：' + String(answer).trim())
+    .join('；') + '。';
 }
 
 /** 去除 bullet 中连续重复的子串（>=8 字） */
@@ -867,7 +844,13 @@ export function clearSessions() {
 
 export function addIntention(job) {
   const data = loadIntentionsRaw();
-  if (!data.jobs.find(j => j.jobId === job.id)) {
+  const existing = data.jobs.find(j => j.jobId === job.id);
+  if (existing) {
+    if (!existing.jobSnapshot) {
+      existing.jobSnapshot = snapshotJob(job);
+      localStorage.setItem(INTENTION_KEY, JSON.stringify(data));
+    }
+  } else {
     data.jobs.push({
       jobId: job.id,
       company: job.company,
@@ -877,12 +860,30 @@ export function addIntention(job) {
       program: job.program,
       score: job._matchScore || 0,
       level: job._matchLevel || 'medium',
+      confidence: job._matchConfidence || 'limited',
+      dataCoverage: job._matchCoverage ?? null,
+      jobSnapshot: snapshotJob(job),
       addedAt: new Date().toISOString(),
       status: 'mining'
     });
     localStorage.setItem(INTENTION_KEY, JSON.stringify(data));
   }
   return data;
+}
+
+function snapshotJob(job) {
+  const fields = [
+    'id', 'company', 'companyType', 'industry', 'title', 'track', 'locations', 'program',
+    'employmentType', 'descriptionType', 'sourceType', 'source', 'description',
+    'sourceListing', 'responsibilities', 'keywords', 'business', 'url', 'deadline', 'crawlDate'
+  ];
+  const snapshot = {};
+  for (const field of fields) {
+    if (job[field] === undefined) continue;
+    const value = job[field];
+    snapshot[field] = Array.isArray(value) ? [...value] : value;
+  }
+  return snapshot;
 }
 
 export function removeIntention(jobId) {
