@@ -52,6 +52,7 @@
   .badge.level-strong{background:var(--brand-50);color:var(--brand-600);border-color:var(--brand-200)}
   .badge.level-medium{background:var(--warn-soft);color:var(--warn);border-color:#f0dcc0}
   .badge.level-weak{background:var(--gray-100);color:var(--gray-400);border-color:var(--gray-200)}
+  .data-note{font-size:var(--text-xs);color:var(--ink-3);margin:0 0 var(--space-3);line-height:1.6}
 
   .mining-progress{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-3)}
   .mining-bar{flex:1;min-width:120px;max-width:200px;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
@@ -230,17 +231,20 @@ body{font-size:13px;color:#000;background:#fff}
             <span v-if="item.track">· {{ item.track }}</span>
             <span v-if="item.program">· {{ item.program }}</span>
             <span v-if="item.locations?.length">· {{ item.locations.join(' / ') }}</span>
+            <span v-if="item.companyType">· {{ item.companyType }}</span>
+            <span v-if="item.deadline">· 截止 {{ item.deadline }}</span>
           </div>
           <div class="intention-badges">
             <span class="badge" :class="'level-' + item.level">
               {{ item.level === 'strong' ? '强匹配' : item.level === 'medium' ? '中匹配' : '弱匹配' }}
             </span>
+            <span class="badge" v-if="item.confidence === 'limited'">依据有限 · {{ item.dataCoverage }}%</span>
             <span class="badge" v-if="item.track">{{ item.track }}</span>
             <span class="badge" v-if="item.employmentType">{{ item.employmentType }}</span>
           </div>
 
           <!-- 挖掘进度 -->
-          <div class="mining-progress" v-if="item.analysis">
+          <div class="mining-progress" v-if="item.analysis?.total > 0">
             <div class="mining-bar">
               <div class="mining-fill covered" :style="{width: (item.analysis.covered / item.analysis.total * 100) + '%'}"></div>
             </div>
@@ -251,11 +255,16 @@ body{font-size:13px;color:#000;background:#fff}
               <span><span class="dot dot-missing"></span>缺失 {{ item.analysis.missing }}</span>
             </div>
           </div>
+          <p class="data-note" v-if="!item.canMine">
+            来源只有职位名称列表，没有具体职责或岗位关键词；无法据此分析经历缺口。
+            <span v-if="item.url">请通过上方投递入口核对具体 JD。</span>
+            <span v-else>目前没有官方入口，请到招聘单位官网查找具体 JD。</span>
+          </p>
 
           <!-- 操作按钮 -->
           <div class="intention-actions">
-            <button class="btn btn-primary" @click="openMiningPanel(item)">
-              {{ expandedJobId === item.jobId ? '收起挖掘' : '经历挖掘' }}
+            <button class="btn btn-primary" @click="openMiningPanel(item)" :disabled="!item.canMine">
+              {{ item.canMine ? (expandedJobId === item.jobId ? '收起挖掘' : '经历挖掘') : '需补充具体 JD' }}
             </button>
             <button class="btn" @click="removeIntention(item.jobId)">移除意向</button>
             <a v-if="item.url" :href="item.url" target="_blank" rel="noopener" class="btn">查看JD →</a>
@@ -388,7 +397,10 @@ body{font-size:13px;color:#000;background:#fff}
 
             <!-- 状态 3：生成结果 -->
             <div class="chat-area" v-else-if="miningState === 'result'">
-              <div style="font-size:12px;color:var(--ink3);margin-bottom:8px">已生成简历文案</div>
+              <div style="font-size:12px;color:var(--ink3);margin-bottom:8px">{{ generatedBullet ? '已生成简历文案' : '没有生成文案' }}</div>
+              <p class="data-note" v-if="!generatedBullet">
+                当前回答中没有足够的可核实事实，因此没有自动生成简历内容。你可以手动填写自己确认真实的事实。
+              </p>
 
               <!-- 编辑模式 -->
               <div v-if="isEditingBullet">
@@ -403,7 +415,7 @@ body{font-size:13px;color:#000;background:#fff}
               <div v-else>
                 <div class="bullet-text">{{ generatedBullet }}</div>
                 <div class="bullet-actions">
-<button class="btn btn-primary" @click="adoptBullet">采纳并保存</button>
+                  <button class="btn btn-primary" @click="adoptBullet" :disabled="!generatedBullet.trim()">采纳并保存</button>
               <button class="btn" @click="isEditingBullet = true; editedBulletText = generatedBullet">编辑</button>
               <button class="btn" @click="regenerateBullet">重新生成</button>
                   <button class="btn btn-danger" @click="cancelMining">放弃</button>
@@ -474,6 +486,7 @@ import { ExperienceMiner } from './src/experience-miner.js';
 import { matchAll, applyDealBreakers } from './src/match-engine.js';
 import { analyzePortrait } from './src/portrait-engine.js';
 import { getProfile } from './src/demo-profile.js';
+import { loadJobLibrary, resolveIntentionJob } from './src/job-library.js';
 
 const { createApp } = Vue;
 const LS_KEY = 'qiuzhao_profile_v4';
@@ -534,10 +547,7 @@ createApp({
         this.portrait = analyzePortrait(this.profileData);
 
         // 3. 加载 JD 库
-        const res = await fetch('./jobs/jd-library.json');
-        if (!res.ok) throw new Error(`JD 库加载失败: ${res.status}`);
-        const lib = await res.json();
-        this.allJobs = lib.jobs || [];
+        this.allJobs = await loadJobLibrary();
 
         // 4. 加载意向岗位
         this.loadIntentions();
@@ -557,8 +567,18 @@ createApp({
 
     loadIntentions() {
       const intentionList = ExperienceMiner.getIntentions();
+      const recoveredJobs = intentionList
+        .map(intention => resolveIntentionJob(intention, this.allJobs))
+        .filter(Boolean);
+      const knownIds = new Set(this.allJobs.map(job => job.id));
+      recoveredJobs.forEach(job => {
+        if (!knownIds.has(job.id)) {
+          this.allJobs.push(job);
+          knownIds.add(job.id);
+        }
+      });
       this.intentions = intentionList.map(intention => {
-        const job = this.allJobs.find(j => j.id === intention.jobId);
+        const job = resolveIntentionJob(intention, this.allJobs);
         if (!job) return null;
 
         // 计算匹配分数（复用 match-engine）
@@ -580,10 +600,15 @@ createApp({
           locations: intention.locations || job.locations,
           employmentType: job.employmentType,
           url: job.url,
+          companyType: job.companyType,
+          deadline: job.deadline,
           score: matchResult ? Math.round(matchResult.score) : 0,
           level: matchResult ? matchResult.level : 'medium',
+          confidence: matchResult?.confidence || 'limited',
+          dataCoverage: matchResult?.dataCoverage ?? 0,
           addedAt: intention.addedAt,
           job: job,
+          canMine: Boolean(job.keywords?.length || job.responsibilities?.length),
           analysis: {
             total: analysis.length,
             covered,
@@ -711,16 +736,20 @@ createApp({
       );
 
       this.generatedBullet = bullet;
-      this.currentSession.generatedBullets = [bullet];
+      this.currentSession.generatedBullets = bullet ? [bullet] : [];
 
-      // 五维评估
-      const evalResult = ExperienceMiner.evaluateFiveDimensions(
-        bullet,
-        this.currentSession.keyword,
-        this.findJob(this.currentSession.jobId)
-      );
-      this.evaluation = evalResult;
-      this.currentSession.fiveDimEval = evalResult;
+      if (bullet) {
+        const evalResult = ExperienceMiner.evaluateFiveDimensions(
+          bullet,
+          this.currentSession.keyword,
+          this.findJob(this.currentSession.jobId)
+        );
+        this.evaluation = evalResult;
+        this.currentSession.fiveDimEval = evalResult;
+      } else {
+        this.evaluation = null;
+        this.currentSession.fiveDimEval = null;
+      }
 
       // 保存会话
       ExperienceMiner.saveSession(this.currentSession);
@@ -729,6 +758,10 @@ createApp({
     },
 
     adoptBullet() {
+      if (!this.generatedBullet.trim()) {
+        this.showToast('请先补充可核实的事实');
+        return;
+      }
       this.currentSession.isAdopted = true;
       this.currentSession.userEditedBullet = this.isEditingBullet ? this.editedBulletText : this.generatedBullet;
       this.currentSession.status = 'completed';
@@ -757,6 +790,10 @@ createApp({
     },
 
     saveEditedBullet() {
+      if (!this.editedBulletText.trim()) {
+        this.showToast('请填写可核实的事实');
+        return;
+      }
       this.generatedBullet = this.editedBulletText;
       this.isEditingBullet = false;
       // 重新评估

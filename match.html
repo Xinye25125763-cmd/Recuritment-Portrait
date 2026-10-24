@@ -106,6 +106,8 @@
   .match-score.strong{color:var(--brand-600)}
   .match-score.medium{color:var(--warn)}
   .match-score.weak{color:var(--gray-400)}
+  .data-confidence{font-size:var(--text-xs);color:var(--ink-3);background:var(--gray-100);border:1px solid var(--gray-200);padding:3px 10px;border-radius:var(--radius-md)}
+  .dim-unavailable{font-size:var(--text-xs);color:var(--ink-3)}
   .match-title{font-weight:600;font-size:var(--text-base);color:var(--ink)}
   .match-company{font-size:var(--text-sm);color:var(--ink-2)}
   .match-badges{display:flex;gap:var(--space-1);flex-wrap:wrap}
@@ -438,6 +440,7 @@
           <span class="badge" v-if="r.job.program">{{ r.job.program }}</span>
           <span class="badge" v-for="l in displayLocations(r.job)" :key="l">{{ l }}</span>
           <span class="badge" v-if="r.job.employmentType">{{ r.job.employmentType }}</span>
+          <span class="data-confidence" v-if="r.confidence === 'limited'">依据有限 · {{ r.dataCoverage }}%</span>
         </div>
         <div class="match-score-bar">
           <div class="match-score-fill" :class="r.level" :style="{ width: r.score + '%' }"></div>
@@ -456,10 +459,11 @@
           <div class="dim-grid">
             <div class="dim-item" v-for="(val, key) in r.dimScores" :key="key">
               <span class="dim-label">{{ dimLabels[key] }}</span>
-              <div class="dim-bar">
+              <div class="dim-bar" v-if="val !== null">
                 <div class="dim-fill" :class="dimLevel(val)" :style="{ width: val + '%' }"></div>
               </div>
-              <span class="dim-val">{{ val }}</span>
+              <span class="dim-unavailable" v-if="val === null">未评估</span>
+              <span class="dim-val" v-else>{{ val }}</span>
             </div>
           </div>
         </div>
@@ -487,12 +491,20 @@
             <span class="kw-tag" v-for="kw in r.job.keywords" :key="kw">{{ kw }}</span>
           </div>
         </div>
+        <div class="detail-section" v-if="r.job.sourceListing || (r.job.source === 'givemeoc' && r.job.description)">
+          <div class="detail-label">来源职位信息（公司职位列表，不是逐岗职责）</div>
+          <div class="detail-resp">{{ r.job.sourceListing || r.job.description }}</div>
+        </div>
         <div class="detail-section">
           <div class="detail-meta">
+            <span v-if="r.job.companyType"><strong>公司类型：</strong>{{ r.job.companyType }}</span>
+            <span v-if="r.job.deadline"><strong>投递截止：</strong>{{ r.job.deadline }}</span>
+            <span v-if="r.job.source"><strong>数据来源：</strong>{{ r.job.source }}</span>
             <span v-if="r.job.business"><strong>业务线：</strong>{{ r.job.business }}</span>
             <span v-if="r.job.crawlDate"><strong>数据日期：</strong>{{ r.job.crawlDate }}</span>
           </div>
-          <a :href="r.job.url" target="_blank" rel="noopener" class="detail-link">查看原始 JD →</a>
+          <a v-if="r.job.url" :href="r.job.url" target="_blank" rel="noopener" class="detail-link">打开投递入口 →</a>
+          <span v-else class="dim-unavailable">暂无官方投递入口</span>
         </div>
       </div>
     </div>
@@ -514,6 +526,7 @@ import {
 } from './src/match-engine.js';
 import { ExperienceMiner } from './src/experience-miner.js';
 import { getProfile } from './src/demo-profile.js';
+import { loadJobLibrary } from './src/job-library.js';
 
 const { createApp } = Vue;
 
@@ -648,18 +661,7 @@ createApp({
 
         this.portrait = analyzePortrait(this.profileData);
 
-        const resp = await fetch('./jobs/jd-library.json');
-        if (!resp.ok) throw new Error(`JD 库加载失败 (HTTP ${resp.status})`);
-        const lib = await resp.json();
-        this.allJobs = lib.jobs || [];
-        // 本地增强库（givemeoc 派生数据，仅本地使用，公开部署 404 自动跳过）
-        try {
-          const resp2 = await fetch('./jobs/jd-library-givemeoc.json');
-          if (resp2.ok) {
-            const lib2 = await resp2.json();
-            this.allJobs = [...(lib2.jobs || []), ...this.allJobs];
-          }
-        } catch (e) { /* 增强库不存在，走纯内置库 */ }
+        this.allJobs = await loadJobLibrary();
 
         this.runMatch(this.profileData);
         this.initTempParams();
@@ -755,7 +757,14 @@ createApp({
     addIntention(jobId) {
       const job = this.allJobs.find(j => j.id === jobId);
       if (!job) return;
-      ExperienceMiner.addIntention(job);
+      const result = this.results.find(r => r.job.id === jobId);
+      ExperienceMiner.addIntention({
+        ...job,
+        _matchScore: result?.score,
+        _matchLevel: result?.level,
+        _matchConfidence: result?.confidence,
+        _matchCoverage: result?.dataCoverage,
+      });
       this.intentionMap[jobId] = true;
       // 可选：同时标记为 interested
       if (!this.appliedMap[jobId]) {

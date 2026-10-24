@@ -59,4 +59,6 @@ node_modules/
 # 本地数据缓存（givemeoc 管道）
 givemeoc_cache.json
 enrichment.json
-pipeline/
+pipeline/*.xlsx
+pipeline/*.xls
+pipeline/*.xlsm

@@ -263,7 +263,12 @@
     <div class="gate-head">
       <span class="gate-score" :class="gate.level">{{ gate.score }} 分</span>
       <span class="gate-level" :class="gate.level">{{ levelText(gate.level) }}</span>
+      <span class="gate-level" v-if="gate.confidence === 'limited'">依据有限 · {{ gate.dataCoverage }}%</span>
       <span class="gate-sub">{{ gate.title }} @ {{ gate.company }}</span>
+    </div>
+
+    <div v-if="gate.confidence === 'limited'" class="gate-warn-box">
+      岗位资料覆盖率为 {{ gate.dataCoverage }}%。此分数只按现有岗位方向、地点、批次等可用信息计算；具体职责或关键词缺失，不应视为完整 JD 匹配结果。
     </div>
 
     <div v-if="gate.level === 'weak'" class="gate-warn-box">
@@ -516,6 +521,7 @@ import { matchAll } from './src/match-engine.js';
 import { analyzePortrait } from './src/portrait-engine.js';
 import { buildResume, auditKeywords, formatDate, BUDGET_PRESETS } from './src/resume-engine.js';
 import { getProfile } from './src/demo-profile.js';
+import { loadJobLibrary, resolveIntentionJob } from './src/job-library.js';
 
 const { createApp } = Vue;
 const LS_KEY = 'qiuzhao_profile_v4';
@@ -581,9 +587,7 @@ createApp({
         }
         this.portrait = analyzePortrait(this.profileData);
 
-        const res = await fetch('./jobs/jd-library.json');
-        const lib = await res.json();
-        this.allJobs = lib.jobs || [];
+        this.allJobs = await loadJobLibrary();
 
         this.loadIntentions();
       } catch (e) {
@@ -593,8 +597,18 @@ createApp({
 
     loadIntentions() {
       const intentionList = ExperienceMiner.getIntentions();
+      const recoveredJobs = intentionList
+        .map(intention => resolveIntentionJob(intention, this.allJobs))
+        .filter(Boolean);
+      const knownIds = new Set(this.allJobs.map(job => job.id));
+      recoveredJobs.forEach(job => {
+        if (!knownIds.has(job.id)) {
+          this.allJobs.push(job);
+          knownIds.add(job.id);
+        }
+      });
       this.intentions = intentionList.map(intention => {
-        const job = this.allJobs.find(j => j.id === intention.jobId);
+        const job = resolveIntentionJob(intention, this.allJobs);
         if (!job) return null;
         const results = matchAll([job], this.profileData, this.portrait);
         const matchResult = results[0];
@@ -603,6 +617,8 @@ createApp({
           title: intention.title || job.title,
           company: intention.company || job.company,
           score: matchResult ? Math.round(matchResult.score) : 0,
+          confidence: matchResult?.confidence || 'limited',
+          dataCoverage: matchResult?.dataCoverage ?? 0,
           matchResult,
         };
       }).filter(Boolean).sort((a, b) => b.score - a.score);
@@ -630,6 +646,8 @@ createApp({
       this.gate = {
         score: matchResult ? Math.round(matchResult.score) : 0,
         level: matchResult?.level || 'medium',
+        confidence: matchResult?.confidence || 'limited',
+        dataCoverage: matchResult?.dataCoverage ?? 0,
         title: intention?.title || job.title,
         company: intention?.company || job.company,
         gaps: matchResult?.gaps || [],

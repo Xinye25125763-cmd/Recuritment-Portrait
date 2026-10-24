@@ -119,7 +119,7 @@ console.log('\n--- 4. generateBullet() ---');
 const bullet = generateBullet(session, 'AB实验', profile.internships[0]);
 assert(bullet.length > 20, `bullet length > 20 (got ${bullet.length})`);
 assert(bullet.includes('5万'), 'bullet includes 5万');
-assert(bullet.includes('50%') || bullet.includes('提升'), 'bullet includes lift metric');
+assert(bullet.includes('策略A 12% vs 策略B 8%'), 'bullet preserves the user-provided result without inventing an uplift');
 console.log(`   Generated: ${bullet}`);
 
 // 5. Test evaluateFiveDimensions()
@@ -156,7 +156,7 @@ assert(loaded.some(s => s.keyword === '指标体系'), 'loaded includes 指标�
 
 // 7. Test intention management
 console.log('\n--- 7. Intention Management ---');
-const intentionJob = { id: 'J001', company: '字节', title: '测试', track: '数据分析', locations: ['北京'], program: '校招', _matchScore: 80, _matchLevel: 'strong' };
+const intentionJob = { id: 'J001', company: '字节', companyType: '央国企', title: '测试', track: '数据分析', locations: ['北京'], program: '校招', source: 'givemeoc', sourceListing: '数据分析师', descriptionType: 'position_listing', _matchScore: 80, _matchLevel: 'strong' };
 addIntention(intentionJob);
 assert(isIntention('J001'), 'isIntention J001 = true');
 assert(!isIntention('J999'), 'isIntention J999 = false');
@@ -164,6 +164,8 @@ assert(!isIntention('J999'), 'isIntention J999 = false');
 const intentions = getIntentions();
 assert(intentions.length === 1, `getIntentions returns 1 (got ${intentions.length})`);
 assert(intentions[0].jobId === 'J001', 'intention jobId = J001');
+assert(intentions[0].jobSnapshot?.title === '测试', 'intention stores job snapshot for later recovery');
+assert(intentions[0].jobSnapshot?.sourceListing === '数据分析师', 'snapshot retains source position fragment');
 
 removeIntention('J001');
 assert(!isIntention('J001'), 'after remove, isIntention J001 = false');
@@ -212,6 +214,7 @@ console.log('\n=== Summary ===');
 console.log(`Passed: ${passed}`);
 console.log(`Failed: ${failed}`);
 console.log(failed === 0 ? '✅ All tests passed!' : `❌ ${failed} test(s) failed`);
+if (failed > 0) process.exitCode = 1;
 
 // Clean up
 global.localStorage = undefined;
